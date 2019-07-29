@@ -36,7 +36,7 @@ plt.title('Plot - Bat')
 #plt.xlim(0.4,)
 #plt.ylim(900,)
 plt.show()
-
+#this is a useless lone
 # plot spectogram
 freq, time, sx = signal.spectrogram(audio, fs=rate_about, window="hamming", nperseg=1024, noverlap=924, detrend=False, scaling="spectrum")
 plt.pcolormesh(time, freq/1000, 10*npy.log10(sx), cmap="viridis")
