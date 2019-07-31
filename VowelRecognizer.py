@@ -8,7 +8,7 @@ Created on Mon Jul 15 15:50:07 2019
 from scipy.io.wavfile import read
 import numpy as npy
 import matplotlib.pyplot as plt
-#import sounddevice as sd
+import sounddevice as sd
 from scipy import fftpack
 from scipy import signal
 
@@ -27,12 +27,12 @@ about_array = npy.array(data_about)
 audio = npy.mean(bit_array[20000:50000],1) #convert to mono channel and trim audio
 
 # plot with time, instead of samples at x-axis
-#sd.play(audio)
+#sd.play(bit_array)
 #length = audio.shape[0]/rate_bat #length of audio (samples/sample rate)
 plt.plot(npy.arange(audio.shape[0])/rate_bat,audio) # time-amplitude plot
 plt.xlabel('Time (s)')
 plt.ylabel('Amplitude')
-plt.title('Plot - about')
+plt.title('Plot - bit')
 #plt.xlim(0.4,)
 #plt.ylim(900,)
 plt.show()
@@ -51,12 +51,12 @@ local_sum = prev_ls =0.0
 counter = 0
 j = 0
 
-while local_sum - prev_ls < 0.0853:
-        local_sum += time[counter]
-        counter+=1
+#while local_sum - prev_ls < 0.0853:
+#        local_sum += time[counter]
+#        counter+=1
 
-prev_ls = local_sum
-mean1 = npy.mean(freq[0:counter-1])
+#prev_ls = local_sum
+#mean1 = npy.mean(freq[0:counter-1])
 absolute = []
 summation = []
 summation.append(0.0)
@@ -69,17 +69,19 @@ for i in range(time.size):
         local_sum += time[counter]
         counter+=1
     
-    prev_ls = local_sum
-    mean2 = (npy.mean(freq[i:i+(counter-1)]))
-    absolute.append(abs(mean2 - mean1))    
-    summation.append(summation[j] + absolute[j if len(absolute)-1 == j else j-1])
-    mean1 = mean2
+    if i >=time.size or i+(counter-2) >= time.size: break
+#    prev_ls = local_sum
+    rise = (npy.sum(freq[i+(counter-2)]-freq[i])) #the wanted index is -2 from the counter, cuz it's been +1 AND it's counting elements. not indices
+#    absolute.append(abs(mean2 - mean1))
+    run = (npy.sum(time[i+(counter-2)]-time[i]))
+    summation.append(summation[j] + rise/run) #gradient of spectrogram
+#    mean1 = mean2
     j+=1
     
 summation = npy.array(summation)
-plt.plot(summation)
+plt.plot(sx)
 plt.title("summation")
 plt.xlabel("elements")
 plt.ylabel("values")
-#plt.xlim(0,20 )
+plt.xlim(0,15 )
 plt.show()
