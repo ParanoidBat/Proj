@@ -46,17 +46,10 @@ plt.title("Spectrogram - audio")
 #plt.ylim(0,10)
 plt.show()
 
-# 8 elements - 0.0853s k hisab se jitne elements bante haen time mae, utne freq k elements ka mean-
+# 8 elements - 0.0853s k hisab se jitne elements bante haen time mae, utni window ka gradient-
 local_sum = prev_ls =0.0
 counter = 0
 j = 0
-
-#while local_sum - prev_ls < 0.0853:
-#        local_sum += time[counter]
-#        counter+=1
-
-#prev_ls = local_sum
-#mean1 = npy.mean(freq[0:counter-1])
 absolute = []
 summation = []
 summation.append(0.0)
@@ -70,18 +63,24 @@ for i in range(time.size):
         counter+=1
     
     if i >=time.size or i+(counter-2) >= time.size: break
-#    prev_ls = local_sum
-    rise = (npy.sum(freq[i+(counter-2)]-freq[i])) #the wanted index is -2 from the counter, cuz it's been +1 AND it's counting elements. not indices
-#    absolute.append(abs(mean2 - mean1))
-    run = (npy.sum(time[i+(counter-2)]-time[i]))
+    rise = freq[i+(counter-2)]-freq[i] #the wanted index is -2 from the counter, cuz it's been +1 AND it's counting elements. not indices
+    run = time[i+(counter-2)]-time[i]
     summation.append(summation[j] + rise/run) #gradient of spectrogram
-#    mean1 = mean2
     j+=1
     
 summation = npy.array(summation)
-plt.plot(sx)
+plt.plot(summation)
 plt.title("summation")
 plt.xlabel("elements")
 plt.ylabel("values")
-plt.xlim(0,15 )
+#plt.xlim(0,15 )
 plt.show()
+
+yes = 1; #if prev elements are smaller than next
+
+for i in range(freq.size -1):
+    if(freq[i] >= freq[i+1]):
+        yes = 0
+        break
+
+print (yes)
