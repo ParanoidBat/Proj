@@ -17,7 +17,7 @@ print ("rate: " , rate_name)
 
 #print (numpy.array(a[1])) #print data. doesn't make difference even if 1 not mentioned
 
-#names_array = npy.array(data_name) #store audio samples into numpy array
+audio = npy.array(data_bit,1) #store audio samples into numpy array
 #sd.play(data_bit)
 
 #find peaks
@@ -39,10 +39,10 @@ print ("rate: " , rate_name)
 #cepstrum
 #norm = npy.hamming(audio.size)/sum(npy.hamming(audio.size)) #need to normalize hamming window before applying to signal
 #filtered = signal.convolve(audio, norm) #to apply to wave, convolve it
-#powerspectrum = npy.abs(fftpack.fft(filtered))**2 #get the power spectrum through fft over the windowed(filtered) signal
-#cepstrum = fftpack.ifft(npy.log(powerspectrum))
-#plt.plot(cepstrum)
-#plt.show()
+powerspectrum = npy.abs(fft(audio))**2 #get the power spectrum through fft over the windowed(filtered) signal
+cepstrum = ifft(npy.log(powerspectrum))
+plt.plot(cepstrum)
+plt.show()
 
 #mean 8 elements
 #j = 0
