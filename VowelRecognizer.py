@@ -30,12 +30,12 @@ def plotSpec(audio, rate):
 
 def energyFrames(time, spectogram):
     average =[]
-#    for i in range(time.size):
+    
     i = 0
     while i < time.size:
-        if i+4 >= time.size: break
+        if i+5 >= time.size: break
         #take mean of matrix along x-axis
-        vector = npy.mean(spectogram[:170,i:i+4],1) #frequencies after index 170 are useless. As 8k Hz is the last formant of use
+        vector = npy.mean(spectogram[:170,i:i+5],1) #frequencies after index 170 are useless. As 8k Hz is the last formant of use
         
         #get a single value out of the vector, which represents a single value energy magnitude of the frame
         vector_avg = npy.mean(vector)
@@ -69,19 +69,18 @@ def segment(energy_frames):
             segments.append(segment_vals[:])
             
             # handle index out of bounds case
-            if not segment_vals:
-                pass
-            else:
-                seg_start.append(segment_vals[0])
+            if segment_vals:
+                seg_start.append(energy_frames.index(segment_vals[0])) #get the index of the segment
             
             centre_vals = energy_frames[k:i]  #prepend to next segment
             
             print ("segmented at ", energy_frames[k])
             
-            if max(segment_vals) > 1000.0:
-                print("non-silence")
-            else:
-                print("silence")
+            if segment_vals: #if list is empty error will be generated in next statement
+                if max(segment_vals) > 1000.0:
+                    print("non-silence")
+                else:
+                    print("silence")
             
             del segment_vals[:]
             
@@ -102,10 +101,8 @@ def segment(energy_frames):
                     
                     segments.append(u_seg_vals[:])
                     
-                    if not u_seg_vals:
-                        pass
-                    else:
-                        seg_start.append(u_seg_vals[0])
+                    if u_seg_vals:
+                        seg_start.append(energy_frames.index(u_seg_vals[0]))
                     
                     print ("segmented at ", energy_frames[k])
                     print ("non-silence") #this condition can only be met if iterator has passed a value >25000, when going back,
@@ -122,6 +119,11 @@ def segment(energy_frames):
                 
         else: segment_vals.append(energy_frames[i])
         i+=1
+    
+    if segment_vals:
+        segments.append(segment_vals)
+        seg_start.append(energy_frames.index(segment_vals[0]))
+        del segment_vals[:]
         
     return segments, seg_start
 
@@ -129,9 +131,13 @@ def createPattern(segments):
     pattern = ""
     
     for seg in segments:
-        if max(seg) > 1000 and max(seg) < 250000: #if energy is b/w 1k to 300k it's a consonant, else if <300k, it's a wovel
-            pattern+="c"
-        elif max(seg) >=250000: pattern +="v"
+        if seg:
+            if max(seg) > 1000 and max(seg) < 35000: #if energy is b/w 1k to 34k it's a consonant, else if <34k, it's a wovel
+                pattern+="c"
+            elif max(seg) >=35000:
+                pattern +="v"
+            elif max(seg) <=1000:
+                pattern +="s"
         
     return pattern
 
@@ -148,70 +154,53 @@ def plotStuff(data, title, xlabel, ylabel, xlim1= 0, xlim2= 0, ylim1 = 0, ylim2=
         plt.ylim(ylim1, ylim2)
         
     plt.show()
+    
+def scaleDown(scale_to, segment, peak): #scale down the energies to give consistant data with the referenced data (eliminating effect of loud sound)
+    factor = scale_to/peak #get the factor to be multiplpied with the segment, to scale them down
+    
+    for i in range(len(segment)):
+        segment[i] = segment[i]*factor
+        
+def smooth(data, size): #smooth data to eliminate noise
+    new_data = []
+    i = 2
 
-# as the project was made originally
-def makingOf():
-    #read audio files
-    rate_bit, data_bit = read("bit.wav")
-    
-    #store audio samples in numpy array
-    bit_array = npy.array(data_bit)
-    
-    audio = npy.mean(bit_array,1) #convert to mono channel and trim audio
-    
-    # plot with time, instead of samples at x-axis
-    #sd.play(audio)
-    #length = audio.shape[0]/rate_bat #length of audio (samples/sample rate)
-    plotTimAmp(audio, rate_bit)
-    
-    # plot spectogram
-    freq, time, sx = plotSpec(audio, rate_bit)
-    
-    #compute high density energy frames, take 5 element window
-    ef = energyFrames(time, sx)
-    plotStuff(ef, "Energy contour", "index", "energy")
-    
-    #recognize and get silence and non-silence regions
-    segments, seg_start = segment()
-    
-    #get the pattern string
-    pattern = createPattern()
-    
-    #plot segments over contour
-    contour = npy.array(ef)
-    seg_indices = [ef.index(i) for i in seg_start]
-    indices = npy.array(seg_indices)
-    
-    plt.plot(contour)
-    plt.plot(indices, contour[indices],'x')
-    plt.title("Energy contour (segments marked)")
-    plt.xlabel("Index")
-    plt.ylabel("Energy")
-    plt.show()
+    while(i< size-2):
+        new_data.append(sum(data[i-2:i+2])/5) #take mean of 5 values, taking i'th value as the pivot
+        i+=1
+        
+    return new_data
     
 def RecognizeVowels(audio_sample):
     sample_rate, wave_data = read(audio_sample)
     data_array = npy.array(wave_data)
-    audio = npy.mean(data_array,1)
+    audio = npy.mean(data_array,1) #make it into mono channel
     
-    freq, time, sx = plotSpec(audio, sample_rate)
+    freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
     
     ef = energyFrames(time, sx)
+    s_ef = smooth(ef, len(ef))
     
-    segments, seg_start = segment(ef)
+    peak = max(s_ef) #if data's highest value is above threshold, scale it down
+    scale_to = 200000
+    if peak >scale_to:
+        scaleDown(scale_to, s_ef, peak)
+    
+    segments, seg_start = segment(s_ef) #get segments and their indices
     
     pattern = createPattern(segments)
     
-    contour = npy.array(ef)
-    seg_indices = [ef.index(i) for i in seg_start]
-    indices = npy.array(seg_indices)
+    contour = npy.array(s_ef)
+    indices = npy.array(seg_start)
     
+    #mark segments on energy contour
     plt.plot(contour)
     plt.plot(indices, contour[indices],'x')
-    plt.title("Energy contour (segments marked)")
+    plt.title("Energy contour (segments marked) - "+ audio_sample)
     plt.xlabel("Index")
     plt.ylabel("Energy")
-#    plt.ylim(250000,)
+    #    plt.ylim(0,500)
+    #    plt.xlim(2000,2500)
     plt.show()
     
     return pattern
