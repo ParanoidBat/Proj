@@ -46,17 +46,18 @@ def energyFrames(time, spectogram):
     return average
 
 def segment(energy_frames):
-    #silent <1000, segment == 25000
+    # first segment == 25000. afterwards, find segments relatively; according to found local maxima
     segments = []
     segment_vals = []
-    centre_vals = [] #centered b/w ith and kth index, when extending segment
-    seg_start = []
-    i = k = 0
+    centre_vals = [] # centered b/w ith and kth index, when extending segment
+    seg_indices = []
+    peaks = []
+    i = k = peak = 0 # main iterator, local iterator, local peak storage
     
     while i < len(energy_frames):
         if energy_frames[i] >=25000.0:
             k = i
-            #the segment should start where the plot begins to rise again. So when segment is found, traverse back to find a value
+            # the segment should start where the plot begins to rise. So when segment is found, traverse back to find a value
             #greater than previous one, and update the segment to start/stop at that value
             while 1:
                 if energy_frames[k] < energy_frames[k-1]:
@@ -68,71 +69,78 @@ def segment(energy_frames):
             del segment_vals[k+1:]
             segments.append(segment_vals[:])
             
-            # handle index out of bounds case
-            if segment_vals:
-                seg_start.append(energy_frames.index(segment_vals[0])) #get the index of the segment
+            if segment_vals: # if list is not null
+                seg_indices.append(energy_frames.index(segment_vals[0])) # get the index of the segment
             
-            centre_vals = energy_frames[k:i]  #prepend to next segment
+            centre_vals = energy_frames[k:i]  # prepend to next segment
             
             print ("segmented at ", energy_frames[k])
-            
-            if segment_vals: #if list is empty error will be generated in next statement
-                if max(segment_vals) > 1000.0:
-                    print("non-silence")
-                else:
-                    print("silence")
-            
             del segment_vals[:]
             
-            for j in range(i, len(energy_frames)):
-                if energy_frames[j] < 25000.0:
-                    k = j
+        else: # else to condition that checks for value 25000
+            segment_vals.append(energy_frames[i])
+            i+=1
+            continue
+            
+        #####################################################
+        k = i
+        
+        while k < len(energy_frames):
+            peak = energy_frames[k]
+            while 1: # find local maxima/peak, break when found
+                try:
+                    k+=1
                     
-                    while 1:
-                        if k+1 == len(energy_frames): break #dont wanna go out of bounds
+                    if energy_frames[k] <= peak/1.5: # if next value is less than value in 'peak', we've found the peak
+                        peaks.append(energy_frames.index(peak))
+                        break
                     
-                        if energy_frames[k] < energy_frames[k+1]:
-                            break
-                        else:
-                            k+=1
+                    elif energy_frames[k] == peak or energy_frames[k] > peak: # if next value is greater than value in 'peak', update it (updation is being done right below' while')
+                        peak = energy_frames[k]
+                
+                except IndexError:
+                    k-=1
+                    break
                     
-                    #while loop breaks where the transition is found, create a new list with both segments' values
-                    u_seg_vals = centre_vals[:] + segment_vals[:] + energy_frames[j:k+1]
+            # extend the segment to find a transition point
+            while k < len(energy_frames):
+                try:
+                    if energy_frames[k] <= peak/1.5: # if the value is atleast 2/3rd of the peak
+                        
+                        # find transition point
+                        while k < len(energy_frames):
+                            if energy_frames[k] < energy_frames[k+1]: # if transition point is found
+                                k+=1
+                                raise IndexError # this is used as an escape from main while loop
+                            else:
+                                k+=1
+                                
+                    else:
+                        k+=1
                     
-                    segments.append(u_seg_vals[:])
-                    
-                    if u_seg_vals:
-                        seg_start.append(energy_frames.index(u_seg_vals[0]))
-                    
-                    print ("segmented at ", energy_frames[k])
-                    print ("non-silence") #this condition can only be met if iterator has passed a value >25000, when going back,
-                    #it's obvious the previous region was non-silence
-                    
-                    del segment_vals[:]
-                    del u_seg_vals[:]
-                    del centre_vals[:]
-                    
-                    i = k
+                except IndexError:
+                    k-=1 # get last index
                     break
                 
-                segment_vals.append(energy_frames[j])
+            temp_seg = centre_vals[:] + energy_frames[i:k+1] if centre_vals else energy_frames[i:k+1] # k+1 is value right before plot begins to rise
+            
+            if centre_vals: del centre_vals[:]
+            i = k = k+1
+            
+            if temp_seg:
+                segments.append(temp_seg[:])
+                seg_indices.append(energy_frames.index(temp_seg[0]))
                 
-        else: segment_vals.append(energy_frames[i])
-        i+=1
-    
-    if segment_vals:
-        segments.append(segment_vals)
-        seg_start.append(energy_frames.index(segment_vals[0]))
-        del segment_vals[:]
+                del temp_seg[:]
         
-    return segments, seg_start
+    return segments, seg_indices, peaks
 
 def createPattern(segments):
     pattern = ""
     
     for seg in segments:
         if seg:
-            if max(seg) > 1000 and max(seg) < 35000: #if energy is b/w 1k to 34k it's a consonant, else if <34k, it's a wovel
+            if max(seg) > 1000 and max(seg) < 35000: #if energy is b/w 1k to 35k it's a consonant, else if <35k, it's a wovel
                 pattern+="c"
             elif max(seg) >=35000:
                 pattern +="v"
@@ -171,36 +179,40 @@ def smooth(data, size): #smooth data to eliminate noise
         
     return new_data
     
-def RecognizeVowels(audio_sample):
-    sample_rate, wave_data = read(audio_sample)
-    data_array = npy.array(wave_data)
-    audio = npy.mean(data_array,1) #make it into mono channel
-    
-    freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
-    
-    ef = energyFrames(time, sx)
-    s_ef = smooth(ef, len(ef))
-    
-    peak = max(s_ef) #if data's highest value is above threshold, scale it down
-    scale_to = 200000
-    if peak >scale_to:
-        scaleDown(scale_to, s_ef, peak)
-    
-    segments, seg_start = segment(s_ef) #get segments and their indices
-    
-    pattern = createPattern(segments)
-    
-    contour = npy.array(s_ef)
-    indices = npy.array(seg_start)
-    
-    #mark segments on energy contour
-    plt.plot(contour)
-    plt.plot(indices, contour[indices],'x')
-    plt.title("Energy contour (segments marked) - "+ audio_sample)
-    plt.xlabel("Index")
-    plt.ylabel("Energy")
-    #    plt.ylim(0,500)
-    #    plt.xlim(2000,2500)
-    plt.show()
-    
-    return pattern
+#def RecognizeVowels(audio_sample):
+audio_sample = "bas aa raha hn3.wav"
+sample_rate, wave_data = read(audio_sample)
+data_array = npy.array(wave_data)
+audio = npy.mean(data_array,1) #make it into mono channel
+
+freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
+
+ef = energyFrames(time, sx)
+
+peak = max(ef) #if data's highest value is above threshold, scale it down
+scale_to = 200000
+if peak >scale_to:
+    scaleDown(scale_to, ef, peak)
+
+s_ef = smooth(ef, len(ef))
+
+segments, seg_start, peaks = segment(s_ef) #get segments and their indices
+
+pattern = createPattern(segments)
+
+contour = npy.array(s_ef)
+indices = npy.array(seg_start)
+peakses = npy.array(peaks)
+
+#mark segments on energy contour
+plt.plot(contour)
+plt.plot(indices, contour[indices],'x')
+plt.plot(peakses, contour[peakses], 'v')
+plt.title("Energy contour - "+ audio_sample)
+plt.xlabel("Index")
+plt.ylabel("Energy")
+#plt.ylim(800,1400)
+#plt.xlim(2000,2500)
+plt.show()
+
+#    return pattern 
