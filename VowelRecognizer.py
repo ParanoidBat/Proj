@@ -77,12 +77,12 @@ def segment(energy_frames):
             print ("segmented at ", energy_frames[k])
             del segment_vals[:]
             
-        else: # else to condition that checks for value 25000
+        else:
             segment_vals.append(energy_frames[i])
             i+=1
             continue
             
-        #####################################################
+        # next segmentations are done through different algorithm
         k = i
         
         while k < len(energy_frames):
@@ -91,7 +91,7 @@ def segment(energy_frames):
                 try:
                     k+=1
                     
-                    if energy_frames[k] <= peak/1.5: # if next value is less than value in 'peak', we've found the peak
+                    if energy_frames[k] <= peak/1.5: # if next value is less than 2/3rd of value in 'peak', we've found the peak
                         peaks.append(energy_frames.index(peak))
                         break
                     
@@ -135,19 +135,39 @@ def segment(energy_frames):
         
     return segments, seg_indices, peaks
 
-def createPattern(segments):
-    pattern = ""
+def createPattern(segments, peaks, energy_frames):
+    pattern = []
+    i= 0
     
     for seg in segments:
         if seg:
-            if max(seg) > 1000 and max(seg) < 35000: #if energy is b/w 1k to 35k it's a consonant, else if <35k, it's a wovel
-                pattern+="c"
-            elif max(seg) >=35000:
-                pattern +="v"
-            elif max(seg) <=1000:
-                pattern +="s"
+            try:
+                if max(seg) == energy_frames[peaks[i]]: # if there's a peak in the segment, it's a vowel
+                    pattern.append("v")
+                    i+=1
+                
+                else: # we are only looking for vowels, so if not found. continue
+                    continue
+                
+                if len(pattern) >= 1: # if segment ends at value 2/3rd of peak, means there's another peak close ahead, thus a vowel. Represent 2 vowels with 'V'
+                    if seg[-1:] >= max(seg)/1.7:
+                        pattern[-1:] = "V"
+                        i+=1 # next peak has been taken care of, move onwards
+#                        continue
+                    
+                if len(pattern) > 1:
+                    # 2 vowels can't be written together (except for above case). if such a case is found, insert a 'c' b/w them
+                    
+                    if (pattern[-2: -1] == "v" or "V" ) and (pattern[-1:] == "v" or "V"): 
+                        if not seg[0] < 1000.0: # if segment terminals haven't dived into silence region
+                            pattern.insert(-1, "c")
+                        else:
+                            pattern.insert(-1, "s")
+            
+            except IndexError:
+                break
         
-    return pattern
+    return "".join(map(str, pattern)) # return string, not list
 
 def plotStuff(data, title, xlabel, ylabel, xlim1= 0, xlim2= 0, ylim1 = 0, ylim2= 0): # a helper function to plot any data
     plt.plot(data)
@@ -171,48 +191,48 @@ def scaleDown(scale_to, segment, peak): #scale down the energies to give consist
         
 def smooth(data, size): #smooth data to eliminate noise
     new_data = []
-    i = 2
+    i = 3
 
-    while(i< size-2):
-        new_data.append(sum(data[i-2:i+2])/5) #take mean of 5 values, taking i'th value as the pivot
+    while(i< size-3):
+        new_data.append(sum(data[i-3:i+3])/7) #take mean of 7 values, taking i'th value as the pivot
         i+=1
         
     return new_data
     
-#def RecognizeVowels(audio_sample):
-audio_sample = "bas aa raha hn3.wav"
-sample_rate, wave_data = read(audio_sample)
-data_array = npy.array(wave_data)
-audio = npy.mean(data_array,1) #make it into mono channel
-
-freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
-
-ef = energyFrames(time, sx)
-
-peak = max(ef) #if data's highest value is above threshold, scale it down
-scale_to = 200000
-if peak >scale_to:
-    scaleDown(scale_to, ef, peak)
-
-s_ef = smooth(ef, len(ef))
-
-segments, seg_start, peaks = segment(s_ef) #get segments and their indices
-
-pattern = createPattern(segments)
-
-contour = npy.array(s_ef)
-indices = npy.array(seg_start)
-peakses = npy.array(peaks)
-
-#mark segments on energy contour
-plt.plot(contour)
-plt.plot(indices, contour[indices],'x')
-plt.plot(peakses, contour[peakses], 'v')
-plt.title("Energy contour - "+ audio_sample)
-plt.xlabel("Index")
-plt.ylabel("Energy")
-#plt.ylim(800,1400)
-#plt.xlim(2000,2500)
-plt.show()
-
-#    return pattern 
+def recognizeVowels(audio_sample):
+#audio_sample = "whatsapp chalao2.wav"
+    sample_rate, wave_data = read(audio_sample)
+    data_array = npy.array(wave_data)
+    audio = npy.mean(data_array,1) #make it into mono channel
+    
+    freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
+    
+    ef = energyFrames(time, sx)
+    
+    peak = max(ef) #if data's highest value is above threshold, scale it down
+    scale_to = 200000
+    if peak >scale_to:
+        scaleDown(scale_to, ef, peak)
+    
+    s_ef = smooth(ef, len(ef))
+    
+    segments, seg_start, peaks = segment(s_ef) #get segments, their indices and peaks' indices
+    
+    pattern = createPattern(segments, peaks, s_ef)
+    
+    contour = npy.array(s_ef)
+    indices = npy.array(seg_start)
+    peakses = npy.array(peaks)
+    
+    #mark segments and peaks on energy contour
+    plt.plot(contour)
+    plt.plot(indices, contour[indices],'x')
+    plt.plot(peakses, contour[peakses], 'v')
+    plt.title("Energy contour - "+ audio_sample)
+    plt.xlabel("Index")
+    plt.ylabel("Energy")
+    #plt.ylim(0,1200)
+    #plt.xlim(2000,2500)
+    plt.show()
+    
+    return pattern 
