@@ -9,22 +9,9 @@ import numpy as npy
 import matplotlib.pyplot as plt
 #import sounddevice as sd
 from scipy import signal
-
-def plotTimAmp(audio, rate):
-     plt.plot(npy.arange(audio.shape[0])/rate,audio) # time-amplitude plot
-     plt.title(audio)
-     plt.xlabel("Time - s")
-     plt.ylabel("Amplitude")
-     plt.show()
     
 def plotSpec(audio, rate):
     freq, time, sx = signal.spectrogram(audio, fs=rate, window="hamming", nperseg=1024, noverlap=924, detrend=False, scaling="spectrum")
-    plt.pcolormesh(time, freq/1000, 10*npy.log10(sx), cmap="viridis") #log the frequency axis for better readability
-    plt.xlabel("Time (s)")
-    plt.ylabel("Frequency (kHz)")
-    plt.title("Spectrogram")
-    #plt.ylim(0,10)
-    plt.show()
     
     return freq, time, sx
 
@@ -133,50 +120,6 @@ def segment(energy_frames):
                 del temp_seg[:]
         
     return segments, seg_indices, peaks
-
-def createPattern(segments, peaks, energy_frames):
-    pattern = []
-    i= j = 0
-    
-    # dont pass empty list
-    if not segments[j]:
-        j+=1
-    
-    # if between range, is a consonant, else a vowel
-    if max(segments[j]) > 1000 and max(segments[j]) <=10000:
-        pattern.append("c")
-        j+=1
-        
-    elif max(segments[j]) > 10000:
-        pattern.append("v")
-        j+=1
-        i=+1 # next block of code recognizes vowels only, we've recognized one here, so update the iterator
-    
-    for seg in segments:
-        
-        seg = segments[j]
-        
-        if seg:
-            try:
-                if max(seg) == energy_frames[peaks[i]]: # if there's a peak in the segment, it's a vowel
-                    pattern.append("v")
-                    i+=1
-                    j+=1
-                
-                else: # we are only looking for vowels, so if not found. continue
-                    j+=1
-                    continue
-                    
-                if len(pattern) > 1:
-                    # 2 vowels can't be written together (except for above case). if such a case is found, insert a 'c' b/w them
-
-                    if pattern[-2] == "v" and pattern[-1] == "v":
-                        pattern.insert(-1, "c")
-            
-            except IndexError:
-                break
-        
-    return "".join(map(str, pattern)) # return string, not list
 
 def plotStuff(data, title, xlabel, ylabel, xlim1= 0, xlim2= 0, ylim1 = 0, ylim2= 0): # a helper function to plot any data
     plt.plot(data)
@@ -289,70 +232,96 @@ def mapEnergyToZcr(factor, peaks, segments):
         pass
     
     return npy.array(indices, dtype = npy.int32)
-    
-def recognizeVowels(audio_sample):
 
-#    audio_sample = "Samples/kahan ho.wav"
-#    map_factor = 1.8
+def peak2peak(peaks, energy_frames):
+    data = []
+    i = 0
     
-    sample_rate, wave_data = read(audio_sample)
-    data_array = npy.array(wave_data)
-    audio = npy.mean(data_array,1) #make it into mono channel
-    
-    freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
-    
-    ef = energyFrames(time, sx)
-    
-    peak = max(ef) #if data's highest value is above threshold, scale it down
-    scale_to = 200000
-    if peak >scale_to:
-        scaleDown(scale_to, ef, peak)
-    
-    s_ef = smooth(ef, len(ef), 7)
-    
-    segments, seg_start, peaks = segment(s_ef) #get segments, their indices and peaks' indices
-    
-    pattern = createPattern(segments, peaks, s_ef)
-    
-    zero_crossing_rate = zeroCrossingRate(audio)
-    smooth_zcr = zcrSmooth(zero_crossing_rate)
-#    smooth_zcr = npy.array(smooth(zero_crossing_rate, zero_crossing_rate.size, 5))
-    mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), None, seg_start)
-    
-    ##plotting##
-    contour = npy.array(s_ef)
-    indices = npy.array(seg_start)
-    peakses = npy.array(peaks)
-    
-    #mark segments and peaks on energy contour
-    plt.plot(contour)
-    plt.plot(indices, contour[indices],'x')
-    plt.plot(peakses, contour[peakses], 'v')
-    plt.title("Energy contour - "+ audio_sample)
-    plt.xlabel("Time - ds (deca sec)")
-    plt.ylabel("Energy")
-    #plt.ylim(0,1200)
-    #plt.xlim(2000,2500)
-    plt.show()
-    
-    # wave
-    plt.figure(figsize=(6, 9)) # x, y size in inches
-    plt.subplots_adjust(hspace = 0.3) # vertical space between subplots in inches
-    
-    plt.subplot(211) # rows, columns, index
-    plt.title("Wave - "+ audio_sample)
-    plt.xlabel("Time - s")
-    plt.ylabel("Amplitude")
-    plt.plot(npy.arange(audio.shape[0])/sample_rate,audio)
-    
-    # zcr
-    plt.subplot(212)
-    plt.plot(smooth_zcr) # prev => zero_crossing_rate
-    plt.plot(mapped_values, smooth_zcr[mapped_values], 'x')
-    plt.title("Zero Crossing Rate - "+ audio_sample)
-    plt.xlabel("Time - hs (hecto sec)")
-    plt.ylabel("Rate")
-    
-    plt.show()
+    while i < len(peaks) -1:
+        data.append(energy_frames[peaks[i]: peaks[i+1]+1])
+        i+=1
         
-    return pattern
+    return data
+
+def padding(pad_with):
+    new_list = [0]*pad_with
+    return new_list
+
+def writeToFile(_from, _to, energy_frames, prop):
+    # max ef is 278
+    pad = length = i = 0
+    data = []
+    
+    with open("ef_peaks.txt", "a") as file:        
+        for f in _from:            
+            length = len(energy_frames[_from[i] : _to[i]]) # get lenth of said segment
+            
+            if(length < 278): pad = 278 - length # if padding is needed
+
+            data = padding(pad) # add padding
+            
+            for x in energy_frames[_from[i] : _to[i]]: #appendd data from segment to list after padding
+                data.append(x)
+            
+            for d in data:
+                file.write(str(d) + ',') # write to file
+            
+            # reset varaibles
+            del data[:] 
+            length = 0
+            
+            file.write(prop[i] + "\n") # append property
+            
+            i+=1
+    
+    print("wrote to file")
+
+############################
+
+audio_sample = "Samples/Whatsapp chalao10.wav"
+
+sample_rate, wave_data = read(audio_sample)
+data_array = npy.array(wave_data)
+audio = npy.mean(data_array,1) #make it into mono channel
+
+freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
+
+ef = energyFrames(time, sx)
+
+peak = max(ef) #if data's highest value is above threshold, scale it down
+scale_to = 200000
+if peak >scale_to:
+    scaleDown(scale_to, ef, peak)
+
+s_ef = smooth(ef, len(ef), 7)
+
+segments, seg_start, peaks = segment(s_ef) #get segments, their indices and peaks' indices
+
+zero_crossing_rate = zeroCrossingRate(audio)
+smooth_zcr = zcrSmooth(zero_crossing_rate)
+#    smooth_zcr = npy.array(smooth(zero_crossing_rate, zero_crossing_rate.size, 5))
+mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), None, seg_start)
+
+##plotting##
+contour = npy.array(s_ef)
+indices = npy.array(seg_start)
+peakses = npy.array(peaks)
+
+#mark segments and peaks on energy contour
+plt.plot(contour)
+plt.plot(indices, contour[indices],'x')
+plt.plot(peakses, contour[peakses], 'v')
+plt.title("Energy contour - "+ audio_sample)
+plt.xlabel("Time - ds (deca sec)")
+plt.ylabel("Energy")
+#plt.ylim(0,1200)
+#plt.xlim(2000,2500)
+plt.show()
+
+peak_to_peak = peak2peak(peaks, s_ef)
+
+#_from = [0, 41, 70, 80, 104, 118, 147]
+#_to = [41, 70, 80, 104, 118, 147, 161]
+#prop = ["s", "v", "s", "v", "v", "v", "s"]
+
+#writeToFile(_from, _to, s_ef, prop)
