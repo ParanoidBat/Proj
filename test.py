@@ -318,10 +318,8 @@ plt.ylabel("Energy")
 #plt.xlim(2000,2500)
 plt.show()
 
-peak_to_peak = peak2peak(peaks, s_ef)
+_from = [60, 88, 112, 122]
+_to = [88, 112, 122, 154]
+prop = ["c", "c", "c", "s"]
 
-#_from = [0, 41, 70, 80, 104, 118, 147]
-#_to = [41, 70, 80, 104, 118, 147, 161]
-#prop = ["s", "v", "s", "v", "v", "v", "s"]
-
-#writeToFile(_from, _to, s_ef, prop)
+writeToFile(_from, _to, s_ef, prop)
