@@ -247,20 +247,20 @@ def padding(pad_with):
     new_list = [0]*pad_with
     return new_list
 
-def writeToFile(_from, _to, energy_frames, prop):
+def writeToFile(_from, _to, vector, prop):
     # max ef is 278
     pad = length = i = 0
     data = []
     
-    with open("ef_peaks.txt", "a") as file:        
+    with open("zcr_peaks.txt", "a") as file:        
         for f in _from:            
-            length = len(energy_frames[_from[i] : _to[i]]) # get lenth of said segment
+            length = len(vector[_from[i] : _to[i]]) # get lenth of said segment
             
             if(length < 278): pad = 278 - length # if padding is needed
 
             data = padding(pad) # add padding
             
-            for x in energy_frames[_from[i] : _to[i]]: #appendd data from segment to list after padding
+            for x in vector[_from[i] : _to[i]]: #appendd data from segment to list after padding
                 data.append(x)
             
             for d in data:
@@ -300,7 +300,7 @@ segments, seg_start, peaks = segment(s_ef) #get segments, their indices and peak
 zero_crossing_rate = zeroCrossingRate(audio)
 smooth_zcr = zcrSmooth(zero_crossing_rate)
 #    smooth_zcr = npy.array(smooth(zero_crossing_rate, zero_crossing_rate.size, 5))
-mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), None, seg_start)
+mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), peaks, None)
 
 ##plotting##
 contour = npy.array(s_ef)
@@ -318,8 +318,18 @@ plt.ylabel("Energy")
 #plt.xlim(2000,2500)
 plt.show()
 
-_from = [60, 88, 112, 122]
-_to = [88, 112, 122, 154]
+# zcr
+plt.subplot(212)
+plt.plot(smooth_zcr) # prev => zero_crossing_rate
+plt.plot(mapped_values, smooth_zcr[mapped_values], 'x')
+plt.title("Zero Crossing Rate - "+ audio_sample)
+plt.xlabel("Time - hs (hecto sec)")
+plt.ylabel("Rate")
+
+plt.show()
+
+_from = [8, 12, 16, 17]
+_to = [12, 16, 17, 22]
 prop = ["c", "c", "c", "s"]
 
-writeToFile(_from, _to, s_ef, prop)
+writeToFile(_from, _to, smooth_zcr,  prop)
