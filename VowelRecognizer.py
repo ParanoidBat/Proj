@@ -45,6 +45,7 @@ def energyFrames(time, spectogram):
     
     return average
 
+#segmentation of the data w.r.t peaks
 def segment(energy_frames):
     # first segment == 25000. afterwards, find segments relatively; according to found local maxima
     segments = []
@@ -134,6 +135,7 @@ def segment(energy_frames):
         
     return segments, seg_indices, peaks
 
+#create the pattern of v,c,s from segmented data
 def createPattern(segments, peaks, energy_frames):
     pattern = []
     i= j = 0
@@ -178,6 +180,7 @@ def createPattern(segments, peaks, energy_frames):
         
     return "".join(map(str, pattern)) # return string, not list
 
+#a generalized plotting function
 def plotStuff(data, title, xlabel, ylabel, xlim1= 0, xlim2= 0, ylim1 = 0, ylim2= 0): # a helper function to plot any data
     plt.plot(data)
     plt.title(title)
@@ -191,14 +194,16 @@ def plotStuff(data, title, xlabel, ylabel, xlim1= 0, xlim2= 0, ylim1 = 0, ylim2=
         plt.ylim(ylim1, ylim2)
         
     plt.show()
-    
-def scaleDown(scale_to, segment, peak): #scale down the energies to give consistant data with the referenced data (eliminating effect of loud sound)
+
+#scale down the energies to give consistant data with the referenced data (eliminating effect of loud sound)
+def scaleDown(scale_to, segment, peak):
     factor = scale_to/peak #get the factor to be multiplpied with the segment, to scale them down
     
     for i in range(len(segment)):
         segment[i] = segment[i]*factor
-        
-def smooth(data, size, mean): #smooth data to eliminate noise
+
+#smooth data to eliminate noise
+def smooth(data, size, mean): 
     new_data = []
     factor = mean//2
     i = factor
@@ -208,6 +213,7 @@ def smooth(data, size, mean): #smooth data to eliminate noise
         i+=1
         
     return new_data
+
 
 def zeroCrossingRate(wave):
     rate = []
@@ -254,6 +260,7 @@ def zeroCrossingRate(wave):
         
     return npy.array(rate)
 
+
 def zcrSmooth(zcr):
     indices = signal.find_peaks(zcr)[0]
 
@@ -262,13 +269,13 @@ def zcrSmooth(zcr):
     for x in indices:
         new_data.append(zcr[x])
     
-#    new_data = npy.linspace(new_data[0], new_data[-1], zcr.size)
-    
     return npy.array(new_data)
 
+# get the factor to enable mapping of segments/peaks of energy frames to zcr
 def calcMappingFactor(ef_length, zcr_length):
     return ef_length/zcr_length
 
+# map segments/peaks from energy frames to zcr
 def mapEnergyToZcr(factor, peaks, segments):
     indices = []
     
@@ -289,7 +296,52 @@ def mapEnergyToZcr(factor, peaks, segments):
         pass
     
     return npy.array(indices, dtype = npy.int32)
+
+# get the data between consecutive peaks
+def peak2peak(peaks, energy_frames):
+    data = []
+    i = 0
     
+    while i < len(peaks) -1:
+        data.append(energy_frames[peaks[i]: peaks[i+1]+1])
+        i+=1
+        
+    return data
+
+# pad the data with 0's for scaling purpose to be used in neutral network
+def padding(pad_with):
+    new_list = [0]*pad_with
+    return new_list
+
+def writeToFile(_from, _to, vector, prop):
+    # max ef is 278
+    pad = length = i = 0
+    data = []
+    
+    with open("zcr_peaks.txt", "a") as file:        
+        for f in _from:            
+            length = len(vector[_from[i] : _to[i]]) # get lenth of said segment
+            
+            if(length < 278): pad = 278 - length # if padding is needed
+
+            data = padding(pad) # add padding
+            
+            for x in vector[_from[i] : _to[i]]: #appendd data from segment to list after padding
+                data.append(x)
+            
+            for d in data:
+                file.write(str(d) + ',') # write to file
+            
+            # reset varaibles
+            del data[:] 
+            length = 0
+            
+            file.write(prop[i] + "\n") # append property
+            
+            i+=1
+    
+    print("wrote to file")
+
 def recognizeVowels(audio_sample):
 
 #    audio_sample = "Samples/kahan ho.wav"
