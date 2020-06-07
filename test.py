@@ -1,33 +1,46 @@
 import numpy as npy
+from sklearn.neural_network import MLPRegressor
+
+def get_index(r):
+    for i in range(r):
+        yield i
 
 indices = {"s": 0, "v": 1, "c": 2, "f": 3}
 
-data = npy.zeros((340, 278)) # get data
-prop = npy.zeros((340, 4)) # 340 sampling rows, for 4 properties each (s, c, v, f)
+NUM_INPUTS = NUM_HIDDEN_NODS = 278
+NUM_OUTPUTS = 4
+NUM_TRAINING_SETS = 1737
 
-with open ("ef_peaks.txt", "r") as file:
-    for line in file:
-        tmp = line.rstrip("\n").split(",")
-        tmp2 = str(tmp[-1:])
+training_inputs = npy.zeros((NUM_TRAINING_SETS, NUM_INPUTS))
+training_outputs = npy.zeros((NUM_TRAINING_SETS, NUM_OUTPUTS))
+
+files = ["ef_peaks.txt", "ef_segs.txt", "zcr_peaks.txt", "zcr_segs.txt"]
+
+# populate input/output vectors
+i = get_index(NUM_TRAINING_SETS)
+
+for f in files:
+    with open (f, "r") as file:
         
-        del tmp[len(tmp) - 1 :]
-        tmp = list(map(float, tmp))
-        
-        # set the input vector
-        for i in range(340):
+        for line in file:
+            tmp = line.rstrip("\n").split(",")
+            tmp2 = ""
+            for e in tmp[-1:]: tmp2+= e
+            
+            del tmp[len(tmp) - 1 :]
+            tmp = list(map(float, tmp))
+            
+            # set the input vector
+            try: index = next(i)
+            except: pass
+            
             for j in range(278):
-                data[i,j] = tmp[j]
+                training_inputs[index, j] = tmp[j]
             
             # set output vector
-            if tmp2.startswith( "s") :
-                print("s hai\n")
-                prop[i,0] = 1
-            elif tmp2 in "v":
-                print("v hai\n")
-                prop[i,1] = 1
-            elif tmp2 in "c":
-                print("c hai\n")
-                prop[i,2] = 1
-            elif tmp2 in "f":
-                print("f hai\n")
-                prop[i,3] = 1
+            training_outputs[index, indices.get(tmp2)] = 1
+
+model = MLPRegressor(hidden_layer_sizes=278, activation='logistic', solver='sgd',
+                     learning_rate='adaptive', learning_rate_init=0.1, max_iter=NUM_TRAINING_SETS*10000,
+                     verbose=True, nesterovs_momentum=False, n_iter_no_change=10000).fit(
+                             training_inputs, training_outputs)
