@@ -1,4 +1,3 @@
 # Proj
-Vowels
 
-Recognizer for vowels and consonants, returning a string of vowel/consonant pattern. Using energy contour to recognize and segment.
+Virtual assistant in Urdu language. System created through recognition of vowels and consonants.
