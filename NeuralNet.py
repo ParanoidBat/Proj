@@ -47,8 +47,8 @@ output_layer = [0]*NUM_OUTPUTS
 hidden_layer_bias = [0]*NUM_HIDDEN_NODES
 output_layer_bias = [0]*NUM_OUTPUTS
 
-hidden_weights = npy.zeros((278,278)) # 2d matrix
-output_weights = npy.zeros((278,4))
+hidden_weights = npy.zeros((NUM_INPUTS, NUM_HIDDEN_NODES)) # 2d matrix
+output_weights = npy.zeros((NUM_HIDDEN_NODES, NUM_OUTPUTS))
 
 NUM_TRAINING_SETS = 1737
 
@@ -103,7 +103,7 @@ for i in range(NUM_OUTPUTS):
 training_set_order = [x for x in range(NUM_TRAINING_SETS)]
 
 # training
-for n in range(10000):
+for n in range(1):
     shuffle(training_set_order, NUM_TRAINING_SETS)
     
     for x in range(NUM_TRAINING_SETS):
@@ -126,7 +126,7 @@ for n in range(10000):
             
             output_layer[j] = sigmoid(activation)
         
-        print("input:", training_inputs[i, :], "output:", output_layer[0], "expected output:", training_outputs[i, :])
+        print("output:", output_layer, "expected output:", training_outputs[i, :])
         
         
         # back propogation
