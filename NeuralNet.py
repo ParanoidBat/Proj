@@ -12,7 +12,7 @@ def get_index(r): # used to populate input vector
     for i in range(r):
         yield i
 
-indices = {"s": 0, "v": 1, "c": 2, "f": 3} # used to set ouput vector
+indices = {"v": 0, "c": 1, "f": 2} # used to set ouput vector
 
 # nueral net functions
 
@@ -36,9 +36,9 @@ def shuffle(arr, n):
     return None
 
 ############################
-NUM_INPUTS = 278 # each sample has 278 elements
-NUM_HIDDEN_NODES = 278
-NUM_OUTPUTS = 4 # s, v, c, f
+NUM_INPUTS = 300 # per sample 300 inputs
+NUM_HIDDEN_NODES = 300
+NUM_OUTPUTS = 3 # v, c, f
 LR = 0.1
 
 hidden_layer = [0]*NUM_HIDDEN_NODES
@@ -50,7 +50,7 @@ output_layer_bias = [0]*NUM_OUTPUTS
 hidden_weights = npy.zeros((NUM_INPUTS, NUM_HIDDEN_NODES)) # 2d matrix
 output_weights = npy.zeros((NUM_HIDDEN_NODES, NUM_OUTPUTS))
 
-NUM_TRAINING_SETS = 1737
+NUM_TRAINING_SETS = 598
 
 #training_inputs = npy.array([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], dtype = npy.float64)
 #training_outputs = npy.array([[0.0], [1.0], [1.0], [0.0]], dtype = npy.float64)
