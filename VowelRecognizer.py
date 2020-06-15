@@ -202,7 +202,7 @@ def scaleDown(scale_to, segment, peak):
     for i in range(len(segment)):
         segment[i] = segment[i]*factor
 
-#smooth data to eliminate noise
+#smooth energy frames data to eliminate noise
 def smooth(data, size, mean): 
     new_data = []
     factor = mean//2
@@ -262,6 +262,8 @@ def zeroCrossingRate(wave):
 
 
 def zcrSmooth(zcr):
+    # staright lines are plotted from peak to peak.
+    
     indices = signal.find_peaks(zcr)[0]
 
     new_data = []
@@ -279,6 +281,7 @@ def calcMappingFactor(ef_length, zcr_length):
 def mapEnergyToZcr(factor, peaks, segments):
     indices = []
     
+    # map peaks
     try:
         if peaks is None: raise IndexError
         
@@ -287,6 +290,7 @@ def mapEnergyToZcr(factor, peaks, segments):
     except IndexError:
         pass
     
+    # map segments
     try:
         if segments is None: raise IndexError
         
@@ -320,7 +324,7 @@ def writeToFile(_from, _to, vector, prop):
     
     with open("zcr_peaks.txt", "a") as file:        
         for f in _from:            
-            length = len(vector[_from[i] : _to[i]]) # get lenth of said segment
+            length = len(vector[_from[i] : _to[i]]) # get length of said segment
             
             if(length < 278): pad = 278 - length # if padding is needed
 
@@ -343,9 +347,7 @@ def writeToFile(_from, _to, vector, prop):
     print("wrote to file")
 
 def recognizeVowels(audio_sample):
-
 #    audio_sample = "Samples/kahan ho.wav"
-#    map_factor = 1.8
     
     sample_rate, wave_data = read(audio_sample)
     data_array = npy.array(wave_data)
@@ -368,7 +370,6 @@ def recognizeVowels(audio_sample):
     
     zero_crossing_rate = zeroCrossingRate(audio)
     smooth_zcr = zcrSmooth(zero_crossing_rate)
-#    smooth_zcr = npy.array(smooth(zero_crossing_rate, zero_crossing_rate.size, 5))
     mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), None, seg_start)
     
     ##plotting##

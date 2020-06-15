@@ -228,17 +228,6 @@ def mapEnergyToZcr(factor, peaks, segments):
     
     return npy.array(indices, dtype = npy.int32)
 
-# get the data between consecutive peaks
-def peak2peak(peaks, energy_frames):
-    data = []
-    i = 0
-    
-    while i < len(peaks) -1:
-        data.append(energy_frames[peaks[i]: peaks[i+1]+1])
-        i+=1
-        
-    return data
-
 # pad the data with 0's for scaling purpose to be used in neutral network
 def padding(pad_with):
     new_list = [0]*pad_with
@@ -300,14 +289,17 @@ def writeSilences(from_en, to_en, energy, from_zcr, to_zcr, zcr, g):
             length = pad = 0
             
             # append property
-            if g != "": file.write("g\n") # going to silence. made this for cases when last vowel ends and proceeds to silence
+            
+            # going to silence. made this for cases in crest-to-crest labelling. when last vowel ends and proceeds to silence
+            # only first case can be as such
+            if g != "" and f == 0: file.write("g\n")
             
             else: file.write("s\n")
     
     print("wrote to file silence")
 
 #####################
-audio_sample = "Samples/Kahan ho.wav"
+audio_sample = "Samples/Whatsapp chalao10.wav"
 
 sample_rate, wave_data = read(audio_sample)
 data_array = npy.array(wave_data)
@@ -328,6 +320,8 @@ segments, seg_start, peaks = segment(s_ef) #get segments, their indices and peak
 
 zero_crossing_rate = zeroCrossingRate(audio)
 smooth_zcr = npy.array(smooth(zero_crossing_rate, zero_crossing_rate.size, 7))
+
+# get mapped values for zcr. pass one vector at a time
 mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), 
                                peaks, None)
 
@@ -357,13 +351,13 @@ plt.ylabel("Rate")
 
 plt.show()
 
-from_en = [155, 176]
-to_en = [176, 196]
+from_en = [60, 88, 112]
+to_en = [75, 112, 122]
 
-from_zcr = [82, 93]
-to_zcr = [93, 103]
+from_zcr = [31, 46, 58]
+to_zcr = [39, 58, 63]
 
-prop = ['f', 'f']
+prop = ['c', 'c', 'f']
 
-#writeSilences([], [41, 70, 161], s_ef, [0, 21, 77], [21, 36, 84], smooth_zcr)
-#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop)
+writeSilences([122], [154], s_ef, [63], [80], smooth_zcr, "g")
+writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop)
