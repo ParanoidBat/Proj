@@ -234,11 +234,11 @@ def padding(pad_with):
     return new_list
 
 def writeToFile(_from_en, _to_en, energy, _from_zcr, _to_zcr, zcr, prop):
-    # max ef is 278
+    # max ef is 300
     pad = length = 0
     data = []
     
-    with open("crests.txt", "a") as file:        
+    with open("troughs.txt", "a") as file:        
         for f in range(len(_from_en)):
             # get length of segments fo energy+zcr            
             length = len(energy[_from_en[f] : _to_en[f]]) + len(zcr[_from_zcr[f] : _to_zcr[f]])
@@ -258,8 +258,10 @@ def writeToFile(_from_en, _to_en, energy, _from_zcr, _to_zcr, zcr, prop):
             # reset varaibles
             del data[:] 
             length = pad = 0
+#            file.write("\n") # comment out if labelling data
             
-            file.write(prop[f] + "\n") # append property
+            try: file.write(prop[f] + "\n") # append property
+            except: pass
     
     print("wrote to file data")
 
@@ -299,7 +301,7 @@ def writeSilences(from_en, to_en, energy, from_zcr, to_zcr, zcr, g):
     print("wrote to file silence")
 
 #####################
-audio_sample = "Samples/Whatsapp chalao10.wav"
+audio_sample = "Samples/Whatsapp chalao15.wav"
 
 sample_rate, wave_data = read(audio_sample)
 data_array = npy.array(wave_data)
@@ -323,7 +325,7 @@ smooth_zcr = npy.array(smooth(zero_crossing_rate, zero_crossing_rate.size, 7))
 
 # get mapped values for zcr. pass one vector at a time
 mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), 
-                               peaks, None)
+                               None, seg_start)
 
 #plotting##
 contour = npy.array(s_ef)
@@ -351,13 +353,13 @@ plt.ylabel("Rate")
 
 plt.show()
 
-from_en = [60, 88, 112]
-to_en = [75, 112, 122]
+from_en = [40, 69, 108, 125]
+to_en = [69, 108, 125, 140]
 
-from_zcr = [31, 46, 58]
-to_zcr = [39, 58, 63]
+from_zcr = [20, 36, 56, 65]
+to_zcr = [36, 56, 65, 73]
 
-prop = ['c', 'c', 'f']
+prop = ["v", "v", "v", "v"]
 
-writeSilences([122], [154], s_ef, [63], [80], smooth_zcr, "g")
-writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop)
+#writeSilences([0], [40], s_ef, [0], [20], smooth_zcr, "")
+#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop)

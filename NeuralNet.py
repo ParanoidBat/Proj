@@ -4,7 +4,7 @@ Created on Thu May 21 16:39:23 2020
 
 @author: HP
 """
-import math
+
 import numpy as npy
 import random
 
@@ -17,10 +17,11 @@ indices = {"v": 0, "c": 1, "f": 2} # used to set ouput vector
 # nueral net functions
 
 def sigmoid(x):
-    return 1 / (1 + math.exp(-x))
+    
+    return 1.0 / (1.0 + npy.exp(-x))
 
 def d_sigmoid(x):
-    return x * (1 - x)
+    return x * (1.0 - x)
 
 def init_weight():
     return random.uniform(0, 1)
@@ -41,11 +42,11 @@ NUM_HIDDEN_NODES = 300
 NUM_OUTPUTS = 3 # v, c, f
 LR = 0.1
 
-hidden_layer = [0]*NUM_HIDDEN_NODES
-output_layer = [0]*NUM_OUTPUTS
+hidden_layer = [0.0]*NUM_HIDDEN_NODES
+output_layer = [0.0]*NUM_OUTPUTS
 
-hidden_layer_bias = [0]*NUM_HIDDEN_NODES
-output_layer_bias = [0]*NUM_OUTPUTS
+hidden_layer_bias = [0.0]*NUM_HIDDEN_NODES
+output_layer_bias = [0.0]*NUM_OUTPUTS
 
 hidden_weights = npy.zeros((NUM_INPUTS, NUM_HIDDEN_NODES)) # 2d matrix
 output_weights = npy.zeros((NUM_HIDDEN_NODES, NUM_OUTPUTS))
@@ -58,7 +59,7 @@ NUM_TRAINING_SETS = 598
 training_inputs = npy.zeros((NUM_TRAINING_SETS, NUM_INPUTS))
 training_outputs = npy.zeros((NUM_TRAINING_SETS, NUM_OUTPUTS))
 
-files = ["ef_peaks.txt", "ef_segs.txt", "zcr_peaks.txt", "zcr_segs.txt"]
+files = ["troughs.txt", "crests.txt"]
 
 # populate input/output vectors
 i = get_index(NUM_TRAINING_SETS)
@@ -78,7 +79,7 @@ for f in files:
             try: index = next(i)
             except: pass
             
-            for j in range(278):
+            for j in range(NUM_INPUTS):
                 training_inputs[index, j] = tmp[j]
             
             # set output vector
@@ -103,7 +104,7 @@ for i in range(NUM_OUTPUTS):
 training_set_order = [x for x in range(NUM_TRAINING_SETS)]
 
 # training
-for n in range(1):
+for n in range(10000):
     shuffle(training_set_order, NUM_TRAINING_SETS)
     
     for x in range(NUM_TRAINING_SETS):
@@ -126,18 +127,18 @@ for n in range(1):
             
             output_layer[j] = sigmoid(activation)
         
-        print("output:", output_layer, "expected output:", training_outputs[i, :])
+        print("output:", output_layer)#, "expected output:", training_outputs[i, :])
         
         
         # back propogation
-        delta_output = [0]*NUM_OUTPUTS
+        delta_output = [0.0]*NUM_OUTPUTS
         
         for j in range(NUM_OUTPUTS):
             error_output = training_outputs[i,j] - output_layer[j]
             
             delta_output[j] = error_output * d_sigmoid(output_layer[j])
         
-        delta_hidden = [0]*NUM_HIDDEN_NODES
+        delta_hidden = [0.0]*NUM_HIDDEN_NODES
         
         for j in range(NUM_HIDDEN_NODES):
             error_hidden = 0.0

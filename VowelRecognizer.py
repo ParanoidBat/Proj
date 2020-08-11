@@ -326,7 +326,7 @@ def writeToFile(_from, _to, vector, prop):
         for f in _from:            
             length = len(vector[_from[i] : _to[i]]) # get length of said segment
             
-            if(length < 278): pad = 278 - length # if padding is needed
+            if(length < 300): pad = 300 - length # if padding is needed
 
             data = padding(pad) # add padding
             
@@ -409,3 +409,5 @@ def recognizeVowels(audio_sample):
     plt.show()
         
     return pattern
+
+recognizeVowels("Test Samples/Kahan ho.wav")
