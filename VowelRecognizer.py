@@ -47,7 +47,7 @@ def energyFrames(time, spectogram):
 
 #segmentation of the data w.r.t peaks
 def segment(energy_frames):
-    # first segment == 25000. afterwards, find segments relatively; according to found local maxima
+    # first segment == 20000. afterwards, find segments relatively; according to found local maxima
     segments = []
     segment_vals = []
     centre_vals = [] # centered b/w ith and kth index, when extending segment
@@ -56,7 +56,7 @@ def segment(energy_frames):
     i = k = peak = 0 # main iterator, local iterator, local peak storage
     
     while i < len(energy_frames):
-        if energy_frames[i] >=25000.0:
+        if energy_frames[i] >=20000.0:
             k = i
             # the segment should start where the plot begins to rise. So when segment is found, traverse back to find a value
             #greater than previous one, and update the segment to start/stop at that value
@@ -93,6 +93,7 @@ def segment(energy_frames):
                     
                     if energy_frames[k] <= peak*0.6: # if next value is less than 2/3rd of value in 'peak', we've found the peak
                         peaks.append(energy_frames.index(peak))
+                        k+=1
                         break
                     
                     elif energy_frames[k] == peak or energy_frames[k] > peak: # if next value is greater than value in 'peak', update it (updation is also being done right below' while')
@@ -105,12 +106,14 @@ def segment(energy_frames):
             # extend the segment to find a transition point
             while k < len(energy_frames):
                 try:
-                    if energy_frames[k] <= peak*0.6: # if the value is atleast 2/3rd of the peak
+                    # if the value is atleast 2/3rd of the peak
+                    # and difference of last segment and peak is atleast 1/8th of the peak
+                    if energy_frames[k] <= peak*0.6 : 
                         
                         # find transition point
                         while k < len(energy_frames):
                             if energy_frames[k] < energy_frames[k+1]: # if transition point is found
-                                k+=1
+#                                k+=1
                                 raise IndexError # this is used as an escape from main while loop
                             else:
                                 k+=1
@@ -119,7 +122,7 @@ def segment(energy_frames):
                         k+=1
                     
                 except IndexError:
-                    k-=1 # get last index
+#                    k-=1 # get last index
                     break
                 
             temp_seg = centre_vals[:] + energy_frames[i:k+1] if centre_vals else energy_frames[i:k+1] # k+1 is value right before plot begins to rise
@@ -198,6 +201,12 @@ def plotStuff(data, title, xlabel, ylabel, xlim1= 0, xlim2= 0, ylim1 = 0, ylim2=
 #scale down the energies to give consistant data with the referenced data (eliminating effect of loud sound)
 def scaleDown(scale_to, segment, peak):
     factor = scale_to/peak #get the factor to be multiplpied with the segment, to scale them down
+    
+    for i in range(len(segment)):
+        segment[i] = segment[i]*factor
+
+def scaleUp(scale_to, segment, peak):
+    factor = scale_to/peak
     
     for i in range(len(segment)):
         segment[i] = segment[i]*factor
@@ -346,68 +355,71 @@ def writeToFile(_from, _to, vector, prop):
     
     print("wrote to file")
 
-def recognizeVowels(audio_sample):
-#    audio_sample = "Samples/kahan ho.wav"
-    
-    sample_rate, wave_data = read(audio_sample)
-    data_array = npy.array(wave_data)
-    audio = npy.mean(data_array,1) #make it into mono channel
-    
-    freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
-    
-    ef = energyFrames(time, sx)
-    
-    peak = max(ef) #if data's highest value is above threshold, scale it down
-    scale_to = 200000
-    if peak >scale_to:
-        scaleDown(scale_to, ef, peak)
-    
-    s_ef = smooth(ef, len(ef), 7)
-    
-    segments, seg_start, peaks = segment(s_ef) #get segments, their indices and peaks' indices
-    
-    pattern = createPattern(segments, peaks, s_ef)
-    
-    zero_crossing_rate = zeroCrossingRate(audio)
-    smooth_zcr = zcrSmooth(zero_crossing_rate)
-    mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), None, seg_start)
-    
-    ##plotting##
-    contour = npy.array(s_ef)
-    indices = npy.array(seg_start)
-    peakses = npy.array(peaks)
-    
-    #mark segments and peaks on energy contour
-    plt.plot(contour)
-    plt.plot(indices, contour[indices],'x')
-    plt.plot(peakses, contour[peakses], 'v')
-    plt.title("Energy contour - "+ audio_sample)
-    plt.xlabel("Time - ds (deca sec)")
-    plt.ylabel("Energy")
-    #plt.ylim(0,1200)
-    #plt.xlim(2000,2500)
-    plt.show()
-    
-    # wave
-    plt.figure(figsize=(6, 9)) # x, y size in inches
-    plt.subplots_adjust(hspace = 0.3) # vertical space between subplots in inches
-    
-    plt.subplot(211) # rows, columns, index
-    plt.title("Wave - "+ audio_sample)
-    plt.xlabel("Time - s")
-    plt.ylabel("Amplitude")
-    plt.plot(npy.arange(audio.shape[0])/sample_rate,audio)
-    
-    # zcr
-    plt.subplot(212)
-    plt.plot(smooth_zcr) # prev => zero_crossing_rate
-    plt.plot(mapped_values, smooth_zcr[mapped_values], 'x')
-    plt.title("Zero Crossing Rate - "+ audio_sample)
-    plt.xlabel("Time - hs (hecto sec)")
-    plt.ylabel("Rate")
-    
-    plt.show()
-        
-    return pattern
+#def recognizeVowels(audio_sample):
+audio_sample = "Samples/Salam12.wav"
 
-recognizeVowels("Test Samples/Kahan ho.wav")
+sample_rate, wave_data = read(audio_sample)
+data_array = npy.array(wave_data)
+audio = npy.mean(data_array,1) #make it into mono channel
+
+freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
+
+ef = energyFrames(time, sx)
+
+peak = max(ef) # scale the data
+scale_to = 200000
+
+if peak > scale_to:
+    scaleDown(scale_to, ef, peak)
+
+elif peak < scale_to:
+    scaleUp(scale_to, ef, peak)
+
+
+s_ef = smooth(ef, len(ef), 7)
+
+segments, seg_start, peaks = segment(s_ef) #get segments, their indices and peaks' indices
+
+pattern = createPattern(segments, peaks, s_ef)
+
+zero_crossing_rate = zeroCrossingRate(audio)
+smooth_zcr = zcrSmooth(zero_crossing_rate)
+mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), None, seg_start)
+
+##plotting##
+contour = npy.array(s_ef)
+indices = npy.array(seg_start)
+peakses = npy.array(peaks)
+
+#mark segments and peaks on energy contour
+plt.plot(contour)
+plt.plot(indices, contour[indices],'x')
+plt.plot(peakses, contour[peakses], 'v')
+plt.title("Energy contour - "+ audio_sample)
+plt.xlabel("Time - ds (deca sec)")
+plt.ylabel("Energy")
+#plt.ylim(0,1200)
+#plt.xlim(2000,2500)
+plt.show()
+
+# wave
+plt.figure(figsize=(6, 9)) # x, y size in inches
+plt.subplots_adjust(hspace = 0.3) # vertical space between subplots in inches
+
+plt.subplot(211) # rows, columns, index
+plt.title("Wave - "+ audio_sample)
+plt.xlabel("Time - s")
+plt.ylabel("Amplitude")
+plt.plot(npy.arange(audio.shape[0])/sample_rate,audio)
+
+# zcr
+plt.subplot(212)
+plt.plot(smooth_zcr) # prev => zero_crossing_rate
+plt.plot(mapped_values, smooth_zcr[mapped_values], 'x')
+plt.title("Zero Crossing Rate - "+ audio_sample)
+plt.xlabel("Time - hs (hecto sec)")
+plt.ylabel("Rate")
+
+plt.show()
+    
+#    return pattern
