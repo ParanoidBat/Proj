@@ -233,12 +233,12 @@ def padding(pad_with):
     new_list = [0]*pad_with
     return new_list
 
-def writeToFile(_from_en, _to_en, energy, _from_zcr, _to_zcr, zcr, prop):
+def writeToFile(_from_en, _to_en, energy, _from_zcr, _to_zcr, zcr, prop, filename):
     # max ef is 300
     pad = length = 0
     data = []
     
-    with open("troughs.txt", "a") as file:        
+    with open(filename, "a") as file:        
         for f in range(len(_from_en)):
             # get length of segments fo energy+zcr            
             length = len(energy[_from_en[f] : _to_en[f]]) + len(zcr[_from_zcr[f] : _to_zcr[f]])
@@ -325,7 +325,7 @@ smooth_zcr = npy.array(smooth(zero_crossing_rate, zero_crossing_rate.size, 7))
 
 # get mapped values for zcr. pass one vector at a time
 mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), 
-                               None, seg_start)
+                               peaks, None) # peaks | seg_start
 
 #plotting##
 contour = npy.array(s_ef)
@@ -353,13 +353,13 @@ plt.ylabel("Rate")
 
 plt.show()
 
-from_en = [40, 69, 108, 125]
-to_en = [69, 108, 125, 140]
+from_en = [56, 90, 119]
+to_en = [90, 119, 129]
 
-from_zcr = [20, 36, 56, 65]
-to_zcr = [36, 56, 65, 73]
+from_zcr = [29, 46, 62]
+to_zcr = [46, 62, 67]
 
-prop = ["v", "v", "v", "v"]
+prop = ["c", "c", "f"]
 
-#writeSilences([0], [40], s_ef, [0], [20], smooth_zcr, "")
-#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop)
+#writeSilences([144], [181], s_ef, [76], [95], smooth_zcr, "g")
+writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "crests.txt")
