@@ -12,7 +12,7 @@ NUM_HIDDEN_NODES = 300
 NUM_OUTPUTS = 3 # v, c, f
 LR = 0.1
 
-NUM_TRAINING_SETS = 598
+NUM_TRAINING_SETS = 903
 
 training_inputs = npy.zeros((NUM_TRAINING_SETS, NUM_INPUTS))
 training_outputs = npy.zeros((NUM_TRAINING_SETS, NUM_OUTPUTS))
@@ -49,8 +49,10 @@ for f in files:
             training_outputs[index, indices.get(tmp2)] = 1
 
 
-model = MLPRegressor(hidden_layer_sizes=NUM_INPUTS, activation='relu', solver='lbfgs',
-                     max_iter=10000, verbose=True).fit(training_inputs, training_outputs)
+model = MLPRegressor(hidden_layer_sizes=NUM_INPUTS, activation='logistic', solver='sgd',
+                     learning_rate='adaptive', learning_rate_init=0.01, max_iter=100000,
+                     tol=0.000001, verbose=True, nesterovs_momentum=False,
+                     n_iter_no_change=100000).fit(training_inputs, training_outputs)
 
 for f in testing_files:
     with open (f, "r") as file:
@@ -71,4 +73,4 @@ for f in testing_files:
                 
                 testing_samples[index, j] = tmp[j]
 
-prediction = model.predict(testing_samples[:, :])
+prediction = model.predict(testing_samples)
