@@ -9,16 +9,16 @@ import VowelRecognizer as vr
 
 pattern = []
 
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao.wav"))
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao2.wav"))
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao3.wav"))
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao4.wav"))
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao5.wav"))
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao6.wav"))
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao7.wav"))
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao8.wav"))
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao9.wav"))
-pattern.append(vr.recognizeVowels("Samples/Whatsapp chalao10.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam6.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam7.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam8.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam9.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam10.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam11.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam12.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam13.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam14.wav"))
+#pattern.append(vr.recognizeVowels("Samples/Salam15.wav"))
 
 #patterns = dict()
 #patterns["kahan ho"] = pattern[0]
