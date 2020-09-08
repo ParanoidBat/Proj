@@ -13,18 +13,18 @@ NUM_HIDDEN_NODES = 300
 NUM_OUTPUTS = 3 # v, c, f
 LR = 0.1
 
-NUM_TRAINING_SETS = 805
+NUM_TRAINING_SETS = 795
 
 training_inputs = npy.zeros((NUM_TRAINING_SETS, NUM_INPUTS))
 training_outputs = npy.zeros((NUM_TRAINING_SETS, NUM_OUTPUTS))
 testing_samples = npy.zeros((59, NUM_INPUTS))
 
 files = ["troughs.txt", "crests.txt"]
-testing_files = ["test_crests.txt", "test_troughs.txt"]
+testing_files = ["test_troughs.txt", "test_crests.txt"]
 
 # populate input/output vectors
 i = get_index(NUM_TRAINING_SETS)
-k = get_index(59)
+k = get_index(59) # for testing samples
 
 
 for f in files:
