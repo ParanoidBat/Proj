@@ -309,7 +309,7 @@ def writeSilences(from_en, to_en, energy, from_zcr, to_zcr, zcr, g):
     print("wrote to file silence")
 
 #####################
-audio_sample = "Samples/Kahan ho7.wav"
+audio_sample = "Samples/Whatsapp chalao15.wav"
 
 sample_rate, wave_data = read(audio_sample)
 data_array = npy.array(wave_data)
@@ -336,7 +336,7 @@ smooth_zcr = npy.array(smooth(zero_crossing_rate, zero_crossing_rate.size, 7))
 
 # get mapped values for zcr. pass one vector at a time
 mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), 
-                               None, seg_start) # peaks | seg_start
+                               peaks, None) # peaks | seg_start
 
 ##plotting##
 contour = npy.array(s_ef)
@@ -364,13 +364,13 @@ plt.ylabel("Rate")
 
 plt.show()
 
-from_en = [44, 63, 84]
-to_en = [63, 84, 113]
+from_en = [56, 90, 119]
+to_en = [90, 119, 129]
 
-from_zcr = [22, 32, 43]
-to_zcr = [32, 43, 58]
+from_zcr = [29, 46, 62]
+to_zcr = [46, 62, 67]
 
-prop = ["v", "v", "v"]
+prop = [ "c", "c", "f"] #ccf
 
-#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "troughs.txt")
 #writeSilences([144], [181], s_ef, [76], [95], smooth_zcr, "g")
+writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "crests.txt")
