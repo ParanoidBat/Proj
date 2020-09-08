@@ -91,7 +91,7 @@ def segment(energy_frames):
                 try:
                     k+=1
                     
-                    if energy_frames[k] <= peak*0.6: # if next value is less than 2/3rd of value in 'peak', we've found the peak
+                    if energy_frames[k] <= peak*0.6 and peak > 1000: # if next value is less than 2/3rd of value in 'peak', we've found the peak
                         peaks.append(energy_frames.index(peak))
                         k+=1
                         break
@@ -108,7 +108,7 @@ def segment(energy_frames):
                 try:
                     # if the value is atleast 2/3rd of the peak
                     # and difference of last segment and peak is atleast 1/8th of the peak
-                    if energy_frames[k] <= peak*0.6 : 
+                    if energy_frames[k] <= peak*0.6 and peak > 1000: 
                         
                         # find transition point
                         while k < len(energy_frames):

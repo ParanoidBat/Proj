@@ -78,7 +78,8 @@ def segment(energy_frames):
                 try:
                     k+=1
                     
-                    if energy_frames[k] <= peak*0.6: # if next value is less than 2/3rd of value in 'peak', we've found the peak
+                    # if next value is less than 2/3rd of value in 'peak', we've found the peak
+                    if energy_frames[k] <= peak*0.6 and peak > 5000:
                         peaks.append(energy_frames.index(peak))
                         break
                     
@@ -92,7 +93,8 @@ def segment(energy_frames):
             # extend the segment to find a transition point
             while k < len(energy_frames):
                 try:
-                    if energy_frames[k] <= peak*0.6: # if the value is atleast 2/3rd of the peak
+                    # if the value is atleast 2/3rd of the peak and peak > 1000 - to negate bad data
+                    if energy_frames[k] <= peak*0.6 and peak > 5000: 
                         
                         # find transition point
                         while k < len(energy_frames):
@@ -125,6 +127,12 @@ def segment(energy_frames):
 #scale down the energies to give consistant data with the referenced data (eliminating effect of loud sound)
 def scaleDown(scale_to, segment, peak):
     factor = scale_to/peak #get the factor to be multiplpied with the segment, to scale them down
+    
+    for i in range(len(segment)):
+        segment[i] = segment[i]*factor
+
+def scaleUp(scale_to, segment, peak):
+    factor = scale_to/peak
     
     for i in range(len(segment)):
         segment[i] = segment[i]*factor
@@ -301,7 +309,7 @@ def writeSilences(from_en, to_en, energy, from_zcr, to_zcr, zcr, g):
     print("wrote to file silence")
 
 #####################
-audio_sample = "Samples/Wasalam15.wav"
+audio_sample = "Samples/Kahan ho7.wav"
 
 sample_rate, wave_data = read(audio_sample)
 data_array = npy.array(wave_data)
@@ -311,10 +319,13 @@ freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
 
 ef = energyFrames(time, sx)
 
-peak = max(ef) #if data's highest value is above threshold, scale it down
-scale_to = 200000
-if peak >scale_to:
+# check data's highest value, scale it up or down according to set threshold
+peak = max(ef)
+scale_to = 200000 # threshold
+if peak > scale_to:
     scaleDown(scale_to, ef, peak)
+elif peak < scale_to:
+    scaleUp(scale_to, ef, peak)
 
 s_ef = smooth(ef, len(ef), 7)
 
@@ -325,9 +336,9 @@ smooth_zcr = npy.array(smooth(zero_crossing_rate, zero_crossing_rate.size, 7))
 
 # get mapped values for zcr. pass one vector at a time
 mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), 
-                               peaks, None) # peaks | seg_start
+                               None, seg_start) # peaks | seg_start
 
-#plotting##
+##plotting##
 contour = npy.array(s_ef)
 indices = npy.array(seg_start)
 peakses = npy.array(peaks)
@@ -353,13 +364,13 @@ plt.ylabel("Rate")
 
 plt.show()
 
-from_en = [86, 106, 129, 143, 171]
-to_en = [106, 129, 143, 158, 207]
+from_en = [44, 63, 84]
+to_en = [63, 84, 113]
 
-from_zcr = [45, 55, 68, 75, 90]
-to_zcr = [55, 68, 75, 83, 109]
+from_zcr = [22, 32, 43]
+to_zcr = [32, 43, 58]
 
-prop = ["f", "c", "f", "f", "f"]
+prop = ["v", "v", "v"]
 
+#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "troughs.txt")
 #writeSilences([144], [181], s_ef, [76], [95], smooth_zcr, "g")
-#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "crests.txt")
