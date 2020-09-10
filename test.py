@@ -50,7 +50,7 @@ for f in files:
 
 
 model = MLPRegressor(hidden_layer_sizes=NUM_INPUTS, activation='logistic', solver='sgd',
-                     learning_rate='adaptive', learning_rate_init=0.01, max_iter=600000,
+                     learning_rate='constant', learning_rate_init=0.01, max_iter=500000,
                      tol=0.000001, verbose=True, nesterovs_momentum=False,
                      n_iter_no_change=100000).fit(training_inputs, training_outputs)
 
@@ -75,4 +75,4 @@ for f in testing_files:
 
 prediction = model.predict(testing_samples)
 
-pickle.dump(model, open("model.sav", 'wb'))
+pickle.dump(model, open("model2.sav", 'wb'))
