@@ -148,7 +148,7 @@ def createPattern(segments, peaks, energy_frames):
         j+=1
     
     # if between range, is a consonant, else a vowel
-    if max(segments[j]) > 1000 and max(segments[j]) <=10000:
+    if max(segments[j]) > 1000 and max(segments[j]) <= 10000:
         pattern.append("c")
         j+=1
         
@@ -355,71 +355,71 @@ def writeToFile(_from, _to, vector, prop):
     
     print("wrote to file")
 
-#def recognizeVowels(audio_sample):
-audio_sample = "Samples/Salam12.wav"
-
-sample_rate, wave_data = read(audio_sample)
-data_array = npy.array(wave_data)
-audio = npy.mean(data_array,1) #make it into mono channel
-
-freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
-
-ef = energyFrames(time, sx)
-
-peak = max(ef) # scale the data
-scale_to = 200000
-
-if peak > scale_to:
-    scaleDown(scale_to, ef, peak)
-
-elif peak < scale_to:
-    scaleUp(scale_to, ef, peak)
-
-
-s_ef = smooth(ef, len(ef), 7)
-
-segments, seg_start, peaks = segment(s_ef) #get segments, their indices and peaks' indices
-
-pattern = createPattern(segments, peaks, s_ef)
-
-zero_crossing_rate = zeroCrossingRate(audio)
-smooth_zcr = zcrSmooth(zero_crossing_rate)
-mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), None, seg_start)
-
-##plotting##
-contour = npy.array(s_ef)
-indices = npy.array(seg_start)
-peakses = npy.array(peaks)
-
-#mark segments and peaks on energy contour
-plt.plot(contour)
-plt.plot(indices, contour[indices],'x')
-plt.plot(peakses, contour[peakses], 'v')
-plt.title("Energy contour - "+ audio_sample)
-plt.xlabel("Time - ds (deca sec)")
-plt.ylabel("Energy")
-#plt.ylim(0,1200)
-#plt.xlim(2000,2500)
-plt.show()
-
-# wave
-plt.figure(figsize=(6, 9)) # x, y size in inches
-plt.subplots_adjust(hspace = 0.3) # vertical space between subplots in inches
-
-plt.subplot(211) # rows, columns, index
-plt.title("Wave - "+ audio_sample)
-plt.xlabel("Time - s")
-plt.ylabel("Amplitude")
-plt.plot(npy.arange(audio.shape[0])/sample_rate,audio)
-
-# zcr
-plt.subplot(212)
-plt.plot(smooth_zcr) # prev => zero_crossing_rate
-plt.plot(mapped_values, smooth_zcr[mapped_values], 'x')
-plt.title("Zero Crossing Rate - "+ audio_sample)
-plt.xlabel("Time - hs (hecto sec)")
-plt.ylabel("Rate")
-
-plt.show()
+def recognizeVowels(audio_sample):
+#    audio_sample = "Samples/Salam12.wav"
     
-#    return pattern
+    sample_rate, wave_data = read(audio_sample)
+    data_array = npy.array(wave_data)
+    audio = npy.mean(data_array,1) #make it into mono channel
+    
+    freq, time, sx = plotSpec(audio, sample_rate) #get spectrogram
+    
+    ef = energyFrames(time, sx)
+    
+    peak = max(ef) # scale the data
+    scale_to = 200000
+    
+    if peak > scale_to:
+        scaleDown(scale_to, ef, peak)
+    
+    elif peak < scale_to:
+        scaleUp(scale_to, ef, peak)
+    
+    
+    s_ef = smooth(ef, len(ef), 7)
+    
+    segments, seg_start, peaks = segment(s_ef) #get segments, their indices and peaks' indices
+    
+    pattern = createPattern(segments, peaks, s_ef)
+    
+    zero_crossing_rate = zeroCrossingRate(audio)
+    smooth_zcr = zcrSmooth(zero_crossing_rate)
+    mapped_values = mapEnergyToZcr(calcMappingFactor(len(s_ef), smooth_zcr.size), None, seg_start)
+    
+    ##plotting##
+    contour = npy.array(s_ef)
+    indices = npy.array(seg_start)
+    peakses = npy.array(peaks)
+    
+    #mark segments and peaks on energy contour
+    plt.plot(contour)
+    plt.plot(indices, contour[indices],'x')
+    plt.plot(peakses, contour[peakses], 'v')
+    plt.title("Energy contour - "+ audio_sample)
+    plt.xlabel("Time - ds (deca sec)")
+    plt.ylabel("Energy")
+    #plt.ylim(0,1200)
+    #plt.xlim(2000,2500)
+    plt.show()
+    
+    # wave
+    plt.figure(figsize=(6, 9)) # x, y size in inches
+    plt.subplots_adjust(hspace = 0.3) # vertical space between subplots in inches
+    
+    plt.subplot(211) # rows, columns, index
+    plt.title("Wave - "+ audio_sample)
+    plt.xlabel("Time - s")
+    plt.ylabel("Amplitude")
+    plt.plot(npy.arange(audio.shape[0])/sample_rate,audio)
+    
+    # zcr
+    plt.subplot(212)
+    plt.plot(smooth_zcr) # prev => zero_crossing_rate
+    plt.plot(mapped_values, smooth_zcr[mapped_values], 'x')
+    plt.title("Zero Crossing Rate - "+ audio_sample)
+    plt.xlabel("Time - hs (hecto sec)")
+    plt.ylabel("Rate")
+    
+    plt.show()
+    
+    return pattern
