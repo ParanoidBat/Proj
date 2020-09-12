@@ -309,7 +309,7 @@ def writeSilences(from_en, to_en, energy, from_zcr, to_zcr, zcr, g):
     print("wrote to file silence")
 
 #####################
-audio_sample = "Samples/Whatsapp chalao15.wav"
+audio_sample = "Test Samples/Whatsapp chalao.wav"
 
 sample_rate, wave_data = read(audio_sample)
 data_array = npy.array(wave_data)
@@ -355,22 +355,22 @@ plt.ylabel("Energy")
 plt.show()
 
 # zcr
-plt.subplot(111)
-plt.plot(smooth_zcr) # prev => zero_crossing_rate
-plt.plot(mapped_values, smooth_zcr[mapped_values], 'x')
-plt.title("Zero Crossing Rate - "+ audio_sample)
-plt.xlabel("Time - hs (hecto sec)")
-plt.ylabel("Rate")
+#plt.subplot(111)
+#plt.plot(smooth_zcr) # prev => zero_crossing_rate
+#plt.plot(mapped_values, smooth_zcr[mapped_values], 'x')
+#plt.title("Zero Crossing Rate - "+ audio_sample)
+#plt.xlabel("Time - hs (hecto sec)")
+#plt.ylabel("Rate")
+#
+#plt.show()
 
-plt.show()
+from_en = [65, 93, 119]
+to_en = [93, 119, 129]
 
-from_en = [56, 90, 119]
-to_en = [90, 119, 129]
+from_zcr = [34, 49, 62]
+to_zcr = [49, 62, 68]
 
-from_zcr = [29, 46, 62]
-to_zcr = [46, 62, 67]
-
-prop = [ "c", "c", "f"] #ccf
+prop = ["c", "c", "f"]
 
 #writeSilences([144], [181], s_ef, [76], [95], smooth_zcr, "g")
-writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "crests.txt")
+#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "test_crests.txt")

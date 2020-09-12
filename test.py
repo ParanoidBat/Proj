@@ -13,7 +13,7 @@ NUM_HIDDEN_NODES = 300
 NUM_OUTPUTS = 3 # v, c, f
 LR = 0.1
 
-NUM_TRAINING_SETS = 795
+NUM_TRAINING_SETS = 785
 
 training_inputs = npy.zeros((NUM_TRAINING_SETS, NUM_INPUTS))
 training_outputs = npy.zeros((NUM_TRAINING_SETS, NUM_OUTPUTS))
@@ -33,7 +33,7 @@ for f in files:
         for line in file:
             tmp = line.rstrip("\n").split(",")
             tmp2 = ""
-            for e in tmp[-1:]: tmp2+= e
+            for e in tmp[-1:]: tmp2 += e
             
             del tmp[len(tmp) - 1 :]
             tmp = list(map(float, tmp))
@@ -42,7 +42,7 @@ for f in files:
             try: index = next(i)
             except: pass
             
-            for j in range(NUM_INPUTS):                
+            for j in range(NUM_INPUTS):
                 training_inputs[index, j] = tmp[j]
             
             # set output vector
@@ -50,7 +50,7 @@ for f in files:
 
 
 model = MLPRegressor(hidden_layer_sizes=NUM_INPUTS, activation='logistic', solver='sgd',
-                     learning_rate='adaptive', learning_rate_init=0.01, max_iter=500000,
+                     learning_rate='adaptive', learning_rate_init=0.01, max_iter=600000,
                      tol=0.000001, verbose=True, nesterovs_momentum=False,
                      n_iter_no_change=100000).fit(training_inputs, training_outputs)
 
@@ -75,4 +75,4 @@ for f in testing_files:
 
 prediction = model.predict(testing_samples)
 
-pickle.dump(model, open("model2.sav", 'wb'))
+pickle.dump(model, open("model3.sav", 'wb'))
