@@ -369,24 +369,25 @@ class Preprocessing:
     #    sample_rate, wave_data = read(audio_sample)
     #    data_array = npy.array(wave_data)
         
-        audio = npy.mean(audio,1) #make it into mono channel
-        if verbose: sd.play(audio)
+#        audio = npy.mean(audio) #make it into mono channel
+        
+#        if verbose: sd.play(audio)
         
         freq, time, sx = self.plotSpec(audio, sample_rate, visual) #get spectrogram
-        if verbose: print("freq: ", freq, "time: ", time, "spectrum: ", sx)
+        if verbose: print("freq: ", freq, "\ntime: ", time, "\nspectrum: ", sx)
         
         ef = self.energyFrames(time, sx)
         
-        peak = max(ef) # scale the data
-        scale_to = 200000
-        
-        if peak > scale_to:
-            self.scaleDown(scale_to, ef, peak)
-            if verbose: print("Data scaled up")
-        
-        elif peak < scale_to:
-            self.scaleUp(scale_to, ef, peak)
-            if verbose: print("Data scaled down")
+#        peak = max(ef) # scale the data
+#        scale_to = 200000
+#        
+#        if peak > scale_to:
+#            self.scaleDown(scale_to, ef, peak)
+#            if verbose: print("Data scaled up")
+#        
+#        elif peak < scale_to:
+#            self.scaleUp(scale_to, ef, peak)
+#            if verbose: print("Data scaled down")
         
         s_ef = self.smooth(ef, len(ef), 7)
         
@@ -432,3 +433,8 @@ class Preprocessing:
             plt.ylabel("Rate")
             
             plt.show()
+
+#sample_rate, wave_data = read("whatsapp.wav")
+#data_array = npy.array(wave_data)
+#r = Preprocessing()
+#r.recognizeVowels(data_array, sample_rate, visual=True)
