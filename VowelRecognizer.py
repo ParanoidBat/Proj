@@ -433,8 +433,3 @@ class Preprocessing:
             plt.ylabel("Rate")
             
             plt.show()
-
-#sample_rate, wave_data = read("whatsapp.wav")
-#data_array = npy.array(wave_data)
-#r = Preprocessing()
-#r.recognizeVowels(data_array, sample_rate, visual=True)
