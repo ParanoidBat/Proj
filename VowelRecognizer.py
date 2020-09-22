@@ -4,10 +4,9 @@ Created on Mon Jul 15 15:50:07 2019
 
 @author: Batman
 """
-from scipy.io.wavfile import read
 import numpy as npy
 import matplotlib.pyplot as plt
-import sounddevice as sd
+#import sounddevice as sd
 from scipy import signal
 
 class Preprocessing:
@@ -366,10 +365,10 @@ class Preprocessing:
     def recognizeVowels(self, audio, sample_rate, verbose=False, visual=False):
     #    audio_sample = "Samples/Salam12.wav"
         
-    #    sample_rate, wave_data = read(audio_sample)
-    #    data_array = npy.array(wave_data)
+#        sample_rate, wave_data = read(audio_sample)
+#        data_array = npy.array(wave_data)
         
-#        audio = npy.mean(audio) #make it into mono channel
+        audio = npy.mean(audio, 1) #make it into mono channel
         
 #        if verbose: sd.play(audio)
         
@@ -378,16 +377,16 @@ class Preprocessing:
         
         ef = self.energyFrames(time, sx)
         
-#        peak = max(ef) # scale the data
-#        scale_to = 200000
-#        
-#        if peak > scale_to:
-#            self.scaleDown(scale_to, ef, peak)
-#            if verbose: print("Data scaled up")
-#        
-#        elif peak < scale_to:
-#            self.scaleUp(scale_to, ef, peak)
-#            if verbose: print("Data scaled down")
+        peak = max(ef) # scale the data
+        scale_to = 200000
+        
+        if peak > scale_to:
+            self.scaleDown(scale_to, ef, peak)
+            if verbose: print("Data scaled up")
+        
+        elif peak < scale_to:
+            self.scaleUp(scale_to, ef, peak)
+            if verbose: print("Data scaled down")
         
         s_ef = self.smooth(ef, len(ef), 7)
         
