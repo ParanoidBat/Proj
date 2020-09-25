@@ -1,15 +1,10 @@
 import VowelRecognizer as vr
-from VowelRecognizer import npy
-from scipy.io.wavfile import read
+#from VowelRecognizer import npy
+#from scipy.io.wavfile import read
 
 pre = vr.Preprocessing()
+pre.recognizeVowels("audio.wav", visual=True)
 
-try:
-    sample_rate, wave_data = read("audio.wav")
-    raise ValueError
-except Exception as e:
-    print(e.__traceback__)
+#data = uti.organize()
 
-audio = npy.array(wave_data)
-
-pre.recognizeVowels(audio, sample_rate, visual=True)
+#uti.plotStuff(data, "organized", "time", "energy")

@@ -7,6 +7,7 @@ Created on Mon Jul 15 15:50:07 2019
 import numpy as npy
 import matplotlib.pyplot as plt
 #import sounddevice as sd
+from scipy.io.wavfile import read
 from scipy import signal
 
 class Preprocessing:
@@ -56,7 +57,7 @@ class Preprocessing:
         segment_vals = []
         centre_vals = [] # centered b/w ith and kth index, when extending segment
         seg_indices = []
-        peaks = []
+        peaks = [] # indices
         i = k = peak = 0 # main iterator, local iterator, local peak storage
         
         while i < len(energy_frames):
@@ -323,7 +324,7 @@ class Preprocessing:
         i = 0
         
         while i < len(peaks) -1:
-            data.append(energy_frames[peaks[i]: peaks[i+1]+1])
+            data.append(energy_frames[peaks[i]: peaks[i+1] +1])
             i+=1
             
         return data
@@ -362,13 +363,13 @@ class Preprocessing:
         
         print("wrote to file")
     
-    def recognizeVowels(self, audio, sample_rate, verbose=False, visual=False):
+    def recognizeVowels(self, audio_sample, verbose=False, visual=False):
     #    audio_sample = "Samples/Salam12.wav"
         
-#        sample_rate, wave_data = read(audio_sample)
-#        data_array = npy.array(wave_data)
+        sample_rate, wave_data = read(audio_sample)
+        data_array = npy.array(wave_data)
         
-        audio = npy.mean(audio, 1) #make it into mono channel
+        audio = npy.mean(data_array, 1) #make it into mono channel
         
 #        if verbose: sd.play(audio)
         
@@ -388,9 +389,9 @@ class Preprocessing:
             self.scaleUp(scale_to, ef, peak)
             if verbose: print("Data scaled down")
         
-        s_ef = self.smooth(ef, len(ef), 7)
+        self.s_ef = self.smooth(ef, len(ef), 7)
         
-        self.segments, self.seg_start, self.peaks = self.segment(s_ef) #get segments, their indices and peaks' indices
+        self.segments, self.seg_start, self.peaks = self.segment(self.s_ef) #get segments, their indices and peaks' indices
         
     #    pattern = createPattern(segments, peaks, s_ef)
         
@@ -399,8 +400,8 @@ class Preprocessing:
         
         if visual:
             ##plotting##
-            mapped_values = self.mapEnergyToZcr(self.calcMappingFactor(len(s_ef), smooth_zcr.size), None, self.seg_start)
-            contour = npy.array(s_ef)
+            mapped_values = self.mapEnergyToZcr(self.calcMappingFactor(len(self.s_ef), smooth_zcr.size), None, self.seg_start)
+            contour = npy.array(self.s_ef)
             indices = npy.array(self.seg_start)
             peakses = npy.array(self.peaks)
             
@@ -432,3 +433,56 @@ class Preprocessing:
             plt.ylabel("Rate")
             
             plt.show()
+            
+        return self.peaks, self.seg_start, self.s_ef
+    
+    def getCrests(self):
+        return self.peaks
+    
+    def getTroughs(self):
+        return self.seg_start
+    
+    def getEnergy(self):
+        return self.s_ef
+
+
+#class Utility():
+#    
+#    def __init__(self, audio, verbose=False, visual=False):
+#        self.pre = Preprocessing()
+#        self.pre.recognizeVowels(audio, verbose, visual)
+#    
+#    
+#    
+#    def organize(self):
+#        """
+#        strip starting silence. organize crests and troughs in order of appearance
+#        """
+#        crests = self.getCrests()
+#        troughs = self.getTroughs()
+#        c = t = 0
+#        print("crests", crests)
+#        print("troughs", troughs)
+#        
+#        data = []
+#        l = len(troughs)
+#        
+#        while t < l: # while trough iterator is less than its length
+#            try:
+#                if troughs[t+1] < crests[c]: # if between 2 troughs there's no crest. its silence, del it
+#                    del self.pre.s_ef[troughs[t] : troughs[t+1]]
+#                    t+=1
+#                    continue
+#                
+#                else: # between 2 troughs there's a crest
+#                    data.append(self.pre.s_ef[troughs[144] : troughs[164]])
+#                    c+=1
+#                    t+=1
+#                
+#                # now check crests
+#                data.append(self.pre.s_ef[crests[c] : crests[c+1]])
+#                
+#            except IndexError:
+#                break;
+#        
+#        return data
