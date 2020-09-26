@@ -434,7 +434,7 @@ class Preprocessing:
             
             plt.show()
             
-        return self.peaks, self.seg_start, self.s_ef
+        return self.peaks, self.seg_start
     
     def getCrests(self):
         return self.peaks
@@ -444,45 +444,3 @@ class Preprocessing:
     
     def getEnergy(self):
         return self.s_ef
-
-
-#class Utility():
-#    
-#    def __init__(self, audio, verbose=False, visual=False):
-#        self.pre = Preprocessing()
-#        self.pre.recognizeVowels(audio, verbose, visual)
-#    
-#    
-#    
-#    def organize(self):
-#        """
-#        strip starting silence. organize crests and troughs in order of appearance
-#        """
-#        crests = self.getCrests()
-#        troughs = self.getTroughs()
-#        c = t = 0
-#        print("crests", crests)
-#        print("troughs", troughs)
-#        
-#        data = []
-#        l = len(troughs)
-#        
-#        while t < l: # while trough iterator is less than its length
-#            try:
-#                if troughs[t+1] < crests[c]: # if between 2 troughs there's no crest. its silence, del it
-#                    del self.pre.s_ef[troughs[t] : troughs[t+1]]
-#                    t+=1
-#                    continue
-#                
-#                else: # between 2 troughs there's a crest
-#                    data.append(self.pre.s_ef[troughs[144] : troughs[164]])
-#                    c+=1
-#                    t+=1
-#                
-#                # now check crests
-#                data.append(self.pre.s_ef[crests[c] : crests[c+1]])
-#                
-#            except IndexError:
-#                break;
-#        
-#        return data
