@@ -9,11 +9,18 @@ Script to be used by android application: ARIJ
 """
 
 import pickle
+import numpy as npy
 
-def getPredictions(testing_samples):
-    with open('model3.sav', 'rb') as file:
-        model = pickle.load(file)
+
+class Predictor:
+
+    def getPredictions(self, testing_samples):
+        with open('model3.sav', 'rb') as file:
+            model = pickle.load(file)
+        
+        self.prediction = model.predict(testing_samples)
+        
+        return self.prediction
     
-    prediction = model.predict(testing_samples)
-    
-    return prediction
+    def getPattern(self):
+        
