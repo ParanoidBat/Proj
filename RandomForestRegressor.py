@@ -33,7 +33,7 @@ for f in files:
         for line in file:
             tmp = line.rstrip("\n").split(",")
             tmp2 = ""
-            for e in tmp[-1:]: tmp2 += e
+            for e in tmp[-1:]: tmp2 += e # get the label
             
             del tmp[len(tmp) - 1 :]
             tmp = list(map(float, tmp))
