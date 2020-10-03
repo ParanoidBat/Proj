@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 #import sounddevice as sd
 from scipy.io.wavfile import read
 from scipy import signal
+import pickle
 
 class Preprocessing:
     
@@ -444,3 +445,17 @@ class Preprocessing:
     
     def getEnergy(self):
         return self.s_ef
+
+
+class Predictor:
+
+    def getPredictions(self, testing_samples):
+        with open('model3.sav', 'rb') as file:
+            model = pickle.load(file)
+        
+        self.prediction = model.predict(testing_samples)
+        
+        return self.prediction
+    
+    def getPattern(self):
+        pass
