@@ -50,9 +50,11 @@ for f in files:
 
 #( n_estimators=100, criterion="mse", max_depth=None, min_samples_split=2, min_samples_leaf=1,
 # max_features=3, bootstrap=True, oob_score=False, max_samples=X.shape[0])
+
 model = RandomForestRegressor(n_estimators=1000, max_features=3, verbose=1).fit(training_inputs, training_outputs)
 
-pickle.dump(model, open("model3.sav", 'wb'))
+
+pickle.dump(model, open("model4.sav", 'wb'))
 
 for f in testing_files:
     with open (f, "r") as file:

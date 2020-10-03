@@ -29,23 +29,23 @@ i = get_index(NUM_TRAINING_SETS)
 k = get_index(59) # for testing samples
 
 
-#for f in testing_files:
-#    with open (f, "r") as file:
-#        
-#        for line in file:
-#            tmp = line.rstrip("\n").split(",")
-#            tmp2 = ""
-#            for e in tmp[-1:]: tmp2+= e
-#            
-#            del tmp[len(tmp) - 1 :]
-#            tmp = list(map(float, tmp))
-#            
-#            # set the input vector
-#            try: index = next(k)
-#            except: pass
-#            
-#            for j in range(NUM_INPUTS):
-#                testing_samples[index, j] = tmp[j]
+for f in testing_files:
+    with open (f, "r") as file:
+        
+        for line in file:
+            tmp = line.rstrip("\n").split(",")
+            tmp2 = ""
+            for e in tmp[-1:]: tmp2+= e
+            
+            del tmp[len(tmp) - 1 :]
+            tmp = list(map(float, tmp))
+            
+            # set the input vector
+            try: index = next(k)
+            except: pass
+            
+            for j in range(NUM_INPUTS):
+                testing_samples[index, j] = tmp[j]
 #            
 #            testing_outputs[index, indices.get(tmp2)] = 1
 
@@ -54,5 +54,5 @@ with open('model3.sav', 'rb') as file:
 
 prediction = model.predict(testing_samples)
 
-score = model.score(testing_samples, testing_outputs)
-print("Test score: {0:.2f} %".format(100 * score))
+#score = model.score(testing_samples, testing_outputs)
+#print("Test score: {0:.2f} %".format(100 * score))

@@ -5,7 +5,8 @@ Created on Mon Jul 15 15:50:07 2019
 @author: Batman
 """
 import numpy as npy
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestRegressor
 #import sounddevice as sd
 from scipy.io.wavfile import read
 from scipy import signal
@@ -449,13 +450,85 @@ class Preprocessing:
 
 class Predictor:
 
-    def getPredictions(self, testing_samples):
-        with open('model3.sav', 'rb') as file:
-            model = pickle.load(file)
+    def getPredictions(self, testing_samples, file):
+        with open(file, 'rb') as f:
+            model = pickle.load(f)
         
         self.prediction = model.predict(testing_samples)
         
         return self.prediction
     
     def getPattern(self):
-        pass
+        prop = {"v": 0, "c": 1, "f": 2}
+        prop_keys = list(prop.keys)
+        pattern = ""
+        result = [False]*3
+        i = 0
+        
+        try:
+            for predict in self.prediction: # prediction is list of lists. predict is single list in it
+                for p in predict: # list has 3 values
+                    if p > 0.55:
+                        result[i] = True # is vowel|consonant|fricative or multiple
+                        i+=1
+                
+                i = 0
+                
+                # case for multiple not handled
+                for r in result:
+                    if r:
+                        pattern += prop_keys[i] # append property according to index that has true
+                        break
+                    i+=1
+                
+                # reset
+                for r in result:
+                    r = False
+                i = 0
+        except:
+            raise Exception # to be caught in android as PyException
+        
+        return pattern
+
+
+class Training:
+    def __init__(self):
+        self.indices = {"v": 0, "c": 1, "f": 2} # used to set ouput vector
+        self.NUM_INPUTS = 300 # per sample 300 inputs
+        self.NUM_OUTPUTS = 3 # v, c, f
+        self.NUM_TRAINING_SETS = 785
+        self.training_inputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_INPUTS))
+        self.training_outputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_OUTPUTS))
+    
+    def get_index(self, r): # used to populate input vector
+        for i in range(r):
+            yield i
+    
+    def train(self, troughs, crests, save_to):
+        files = [troughs, crests]
+        
+        i = self.get_index(self.NUM_TRAINING_SETS)
+        
+        for f in files:
+            with open (f, "r") as file:
+                for line in file:
+                    tmp = line.rstrip("\n").split(",")
+                    tmp2 = ""
+                    for e in tmp[-1:]: tmp2 += e # get the label
+                    
+                    del tmp[len(tmp) - 1 :]
+                    tmp = list(map(float, tmp))
+                    
+                    # set the input vector
+                    try: index = next(i)
+                    except: pass
+                    
+                    for j in range(self.NUM_INPUTS):
+                        self.training_inputs[index, j] = tmp[j]
+                    
+                    # set output vector
+                    self.training_outputs[index, self.indices.get(tmp2)] = 1
+        
+        model = RandomForestRegressor(n_estimators=1000, max_features=3, verbose=1).fit(self.training_inputs, self.training_outputs)
+
+        pickle.dump(model, open(save_to, 'wb'))
