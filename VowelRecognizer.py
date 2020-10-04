@@ -345,6 +345,7 @@ class Preprocessing:
             for f in _from:            
                 length = len(vector[_from[i] : _to[i]]) # get length of said segment
                 
+                # if padding length is changed. change in ARIJ app, class: Utility, function: organize
                 if(length < 300): pad = 300 - length # if padding is needed
     
                 data = self.padding(pad) # add padding
@@ -450,13 +451,39 @@ class Preprocessing:
 
 class Predictor:
 
-    def getPredictions(self, testing_samples, file):
+    def getPredictions(self, file, testing_samples):
         with open(file, 'rb') as f:
             model = pickle.load(f)
         
         self.prediction = model.predict(testing_samples)
         
         return self.prediction
+    
+    def getPredictionsARIJ(self, file, data): # data is received as single array
+        """
+        getPredictions implementation for Android App: ARIJ
+        """
+        with open(file, 'rb') as f:
+            model = pickle.load(f)
+        
+        # args has lists of regions
+        pad = 300
+        pairs = len(data)//pad # 300 padded each sample
+#        print("len", len(data))
+        
+        samples = npy.zeros((pairs, pad))
+        
+#        for i in range(pairs):
+#            samples.append(list(data[i*pad : (i*pad)+pad]))
+        
+        for i in range(pairs):
+            for j in range(pad):
+                samples[i, j] = data[(i*pad) +j]
+        
+        self.prediction = model.predict(samples)
+        
+        return self.prediction
+        
     
     def getPattern(self):
         prop = {"v": 0, "c": 1, "f": 2}
