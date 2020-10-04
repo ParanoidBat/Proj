@@ -5,7 +5,7 @@ Created on Mon Jul 15 15:50:07 2019
 @author: Batman
 """
 import numpy as npy
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 #import sounddevice as sd
 from scipy.io.wavfile import read
@@ -399,11 +399,11 @@ class Preprocessing:
     #    pattern = createPattern(segments, peaks, s_ef)
         
         zero_crossing_rate = self.zeroCrossingRate(audio)
-        smooth_zcr = self.zcrSmooth(zero_crossing_rate)
+        self.smooth_zcr = self.zcrSmooth(zero_crossing_rate)
         
         if visual:
             ##plotting##
-            mapped_values = self.mapEnergyToZcr(self.calcMappingFactor(len(self.s_ef), smooth_zcr.size), None, self.seg_start)
+            mapped_values = self.mapEnergyToZcr(self.calcMappingFactor(len(self.s_ef), self.smooth_zcr.size), None, self.seg_start)
             contour = npy.array(self.s_ef)
             indices = npy.array(self.seg_start)
             peakses = npy.array(self.peaks)
@@ -429,8 +429,8 @@ class Preprocessing:
             
             # zcr
             plt.subplot(212)
-            plt.plot(smooth_zcr)
-            plt.plot(mapped_values, smooth_zcr[mapped_values], 'x')
+            plt.plot(self.smooth_zcr)
+            plt.plot(mapped_values, self.smooth_zcr[mapped_values], 'x')
             plt.title("Zero Crossing Rate")
             plt.xlabel("Time - hs (hecto sec)")
             plt.ylabel("Rate")
@@ -447,6 +447,15 @@ class Preprocessing:
     
     def getEnergy(self):
         return self.s_ef
+    
+    def getZCR(self):
+        return self.smooth_zcr.tolist()
+    
+    def getCrestsZCR(self):
+        return self.mapEnergyToZcr(self.calcMappingFactor(len(self.s_ef), self.smooth_zcr.size), self.peaks, None).tolist()
+    
+    def getTroughsZCR(self):
+        return self.mapEnergyToZcr(self.calcMappingFactor(len(self.s_ef), self.smooth_zcr.size), None, self.seg_start).tolist()
 
 
 class Predictor:
@@ -469,12 +478,8 @@ class Predictor:
         # args has lists of regions
         pad = 300
         pairs = len(data)//pad # 300 padded each sample
-#        print("len", len(data))
         
         samples = npy.zeros((pairs, pad))
-        
-#        for i in range(pairs):
-#            samples.append(list(data[i*pad : (i*pad)+pad]))
         
         for i in range(pairs):
             for j in range(pad):
@@ -487,7 +492,7 @@ class Predictor:
     
     def getPattern(self):
         prop = {"v": 0, "c": 1, "f": 2}
-        prop_keys = list(prop.keys)
+        prop_keys = list(prop.keys())
         pattern = ""
         result = [False]*3
         i = 0
@@ -513,7 +518,8 @@ class Predictor:
                     r = False
                 i = 0
         except:
-            raise Exception # to be caught in android as PyException
+            pass
+#            raise Exception # catch in android as PyException
         
         return pattern
 
