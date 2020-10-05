@@ -491,8 +491,9 @@ class Predictor:
         
     
     def getPattern(self):
-        prop = {"v": 0, "c": 1, "f": 2}
-        prop_keys = list(prop.keys())
+#        prop = {"v": 0, "c": 1, "f": 2}
+#        prop_keys = list(prop.keys())
+        prop = ["v", "c", "f"]
         pattern = ""
         result = [False]*3
         i = 0
@@ -502,25 +503,26 @@ class Predictor:
                 for p in predict: # list has 3 values
                     if p > 0.55:
                         result[i] = True # is vowel|consonant|fricative or multiple
-                        i+=1
+                    
+                    i+=1
                 
                 i = 0
                 
                 # case for multiple not handled
                 for r in result:
                     if r:
-                        pattern += prop_keys[i] # append property according to index that has true
+                        pattern += prop[i] # append property according to index that has true
                         break
                     i+=1
                 
                 # reset
-                for r in result:
-                    r = False
+                for k in range(len(result)):
+                    result[k] = False
                 i = 0
         except:
             pass
 #            raise Exception # catch in android as PyException
-        
+        print(self.prediction)
         return pattern
 
 
