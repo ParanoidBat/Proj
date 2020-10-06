@@ -399,7 +399,8 @@ class Preprocessing:
     #    pattern = createPattern(segments, peaks, s_ef)
         
         zero_crossing_rate = self.zeroCrossingRate(audio)
-        self.smooth_zcr = self.zcrSmooth(zero_crossing_rate)
+#        self.smooth_zcr = self.zcrSmooth(zero_crossing_rate)
+        self.smooth_zcr = npy.array( self.smooth(zero_crossing_rate, zero_crossing_rate.size, 7))
         
         if visual:
             ##plotting##
@@ -449,6 +450,7 @@ class Preprocessing:
         return self.s_ef
     
     def getZCR(self):
+        print(self.smooth_zcr)
         return self.smooth_zcr.tolist()
     
     def getCrestsZCR(self):
@@ -520,8 +522,8 @@ class Predictor:
                     result[k] = False
                 i = 0
         except:
-            pass
-#            raise Exception # catch in android as PyException
+            raise Exception # catch in android as PyException
+        
         print(self.prediction)
         return pattern
 
@@ -564,6 +566,6 @@ class Training:
                     # set output vector
                     self.training_outputs[index, self.indices.get(tmp2)] = 1
         
-        model = RandomForestRegressor(n_estimators=1000, max_features=3, verbose=1).fit(self.training_inputs, self.training_outputs)
+        model = RandomForestRegressor(n_estimators=10000, max_features=3).fit(self.training_inputs, self.training_outputs)
 
         pickle.dump(model, open(save_to, 'wb'))
