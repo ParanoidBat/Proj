@@ -450,7 +450,6 @@ class Preprocessing:
         return self.s_ef
     
     def getZCR(self):
-        print(self.smooth_zcr)
         return self.smooth_zcr.tolist()
     
     def getCrestsZCR(self):
@@ -524,7 +523,7 @@ class Predictor:
         except:
             raise Exception # catch in android as PyException
         
-        print(self.prediction)
+#        print(self.prediction)
         return pattern
 
 
