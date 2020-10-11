@@ -18,11 +18,12 @@ NUM_TRAINING_SETS = 795
 training_inputs = npy.zeros((NUM_TRAINING_SETS, NUM_INPUTS))
 training_outputs = npy.zeros((NUM_TRAINING_SETS, NUM_OUTPUTS))
 
-testing_samples = npy.zeros((59, NUM_INPUTS))
+#testing_samples = npy.zeros((59, NUM_INPUTS))
+testing_samples = npy.zeros((15, NUM_INPUTS))
 testing_outputs = npy.zeros((59, 3))
 
-files = ["troughs.txt", "crests.txt"]
-testing_files = ["test_troughs.txt", "test_crests.txt"]
+#testing_files = ["test_troughs.txt", "test_crests.txt"]
+testing_files = ["test.txt"]
 
 # populate input/output vectors
 i = get_index(NUM_TRAINING_SETS)
@@ -49,10 +50,11 @@ for f in testing_files:
 #            
 #            testing_outputs[index, indices.get(tmp2)] = 1
 
-with open('model3.sav', 'rb') as file:
+with open('new_model_combine_silence.sav', 'rb') as file:
     model = pickle.load(file)
 
 prediction = model.predict(testing_samples)
+
 
 #score = model.score(testing_samples, testing_outputs)
 #print("Test score: {0:.2f} %".format(100 * score))

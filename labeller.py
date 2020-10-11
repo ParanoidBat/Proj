@@ -281,7 +281,6 @@ def writeSilences(from_en, to_en, energy, from_zcr, to_zcr, zcr, g):
         for f in range(len(from_en)):
 
             length = len(energy[from_en[f] : to_en[f]]) + len(zcr[from_zcr[f] : to_zcr[f]])
-            
             if(length < 300): pad = 300 - length # if padding is needed
 
             data = padding(pad) # add padding
@@ -301,7 +300,7 @@ def writeSilences(from_en, to_en, energy, from_zcr, to_zcr, zcr, g):
             # append property
             
             # going to silence. made this for cases in crest-to-crest labelling. when last vowel ends and proceeds to silence
-            # only first case can be as such
+            # only one case can be as such. and it's made to be first
             if g != "" and f == 0: file.write("g\n")
             
             else: file.write("s\n")
@@ -309,7 +308,7 @@ def writeSilences(from_en, to_en, energy, from_zcr, to_zcr, zcr, g):
     print("wrote to file silence")
 
 #####################
-audio_sample = "Test Samples/Whatsapp chalao.wav"
+audio_sample = "Additional Samples/Whatsapp chalao15.wav"
 
 sample_rate, wave_data = read(audio_sample)
 data_array = npy.array(wave_data)
@@ -364,13 +363,13 @@ plt.show()
 #
 #plt.show()
 
-from_en = [65, 93, 119]
-to_en = [93, 119, 129]
+from_en = [78]
+to_en = [102]
 
-from_zcr = [34, 49, 62]
-to_zcr = [49, 62, 68]
+from_zcr = [40]
+to_zcr = [53]
 
-prop = ["c", "c", "f"]
+prop = ["c"] # ccf
 
-#writeSilences([144], [181], s_ef, [76], [95], smooth_zcr, "g")
-#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "test_crests.txt")
+#writeSilences([128], [140], s_ef, [66], [72], smooth_zcr, "g")
+#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "crests2.txt")

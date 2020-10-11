@@ -5,22 +5,26 @@ import VowelRecognizer as vr
 
 pre = vr.Preprocessing()
 
-#pre.recognizeVowels("Samples/Kahan ho.wav")
-#ehh = pre.getZCR()
+pre.recognizeVowels("audio.wav", visual=True)
 #
-#data = pre.getEnergy()
+#energy = pre.getEnergy()
 #troughs =pre.getTroughs()
 #crests = pre.getCrests()
+#
+#zcr = pre.getZCR()
+#ztroughs = pre.getTroughsZCR()
+#zcrests = pre.getCrestsZCR()
 
-
-with open("check.txt", "r") as file:
-    for line in file:
-        tmp = line.rstrip("\n").split(",")
-        tmp2 = ""
-        for e in tmp[-1:]: tmp2 += e
-        
-        del tmp[len(tmp) - 1 :]
-        tmp = list(map(float, tmp))
-        
-                
-        pre.plotStuff(tmp, "organized", "time", "energy")
+#data = []
+#
+#with open("test.txt", "r") as file:
+#    for line in file:
+#        tmp = line.rstrip("\n").split(",")
+#        tmp2 = ""
+#        for e in tmp[-1:]: tmp2 += e
+#        
+#        del tmp[len(tmp) - 1 :]
+#        tmp = list(map(float, tmp))
+#        data.append(tmp)
+#                
+#        pre.plotStuff(tmp, "organized", "time", "energy")

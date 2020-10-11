@@ -492,8 +492,6 @@ class Predictor:
         
     
     def getPattern(self):
-#        prop = {"v": 0, "c": 1, "f": 2}
-#        prop_keys = list(prop.keys())
         prop = ["v", "c", "f"]
         pattern = ""
         result = [False]*3
