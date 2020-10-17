@@ -6,19 +6,20 @@ def get_index(r): # used to populate input vector
     for i in range(r):
         yield i
 
-indices = {"v": 0, "c": 1, "f": 2, "s": 3, "g": 4} # used to set ouput vector
+indices = {"v": 0, "c": 1, "f": 2} # used to set ouput vector
 ############################
 NUM_INPUTS = 300 # per sample 300 inputs
 NUM_HIDDEN_NODES = 300
-NUM_OUTPUTS = 5 # v, c, f, s, g
+NUM_OUTPUTS = 3 # v, c, f
 
-NUM_TRAINING_SETS = 1913
+NUM_TRAINING_SETS = 2566
 
 training_inputs = npy.zeros((NUM_TRAINING_SETS, NUM_INPUTS))
 training_outputs = npy.zeros((NUM_TRAINING_SETS, NUM_OUTPUTS))
 testing_samples = npy.zeros((59, NUM_INPUTS))
 
-files = ["troughs.txt", "troughs2.txt", "crests.txt", "crests2.txt", "silences.txt"]
+files = ["troughs3.txt", "troughs2.txt", "troughs.txt",
+         "crests3.txt", "crests2.txt", "crests.txt"]
 testing_files = ["test_troughs.txt", "test_crests.txt"]
 
 # populate input/output vectors
@@ -50,10 +51,10 @@ for f in files:
 #( n_estimators=100, criterion="mse", max_depth=None, min_samples_split=2, min_samples_leaf=1,
 # max_features=3, bootstrap=True, oob_score=False, max_samples=X.shape[0])
 
-model = RandomForestRegressor(n_estimators=1000, max_features=5, verbose=1).fit(training_inputs, training_outputs)
+model = RandomForestRegressor(n_estimators=1000, max_features=NUM_OUTPUTS, verbose=1).fit(training_inputs, training_outputs)
 
 
-pickle.dump(model, open("new_model_combine_silence.sav", 'wb'))
+pickle.dump(model, open("newer_model_with_all_combine.sav", 'wb'))
 
 for f in testing_files:
     with open (f, "r") as file:
@@ -74,4 +75,4 @@ for f in testing_files:
                 
                 testing_samples[index, j] = tmp[j]
 
-prediction = model.predict(testing_samples)
+#prediction = model.predict(testing_samples)

@@ -308,7 +308,7 @@ def writeSilences(from_en, to_en, energy, from_zcr, to_zcr, zcr, g):
     print("wrote to file silence")
 
 #####################
-audio_sample = "Additional Samples/Whatsapp chalao15.wav"
+audio_sample = "More Samples/Whatsapp chalao20.wav"
 
 sample_rate, wave_data = read(audio_sample)
 data_array = npy.array(wave_data)
@@ -363,13 +363,13 @@ plt.show()
 #
 #plt.show()
 
-from_en = [78]
-to_en = [102]
+from_en = [36, 69, 95]
+to_en = [69, 95, 106]
 
-from_zcr = [40]
-to_zcr = [53]
+from_zcr = [18, 35, 49]
+to_zcr = [35, 49, 55]
 
-prop = ["c"] # ccf
+prop = ["c", "c", "f"] # ccf
 
 #writeSilences([128], [140], s_ef, [66], [72], smooth_zcr, "g")
-#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "crests2.txt")
+#writeToFile(from_en, to_en, s_ef, from_zcr, to_zcr, smooth_zcr, prop, "crests3.txt")

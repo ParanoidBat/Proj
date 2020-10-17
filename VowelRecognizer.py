@@ -63,10 +63,11 @@ class Preprocessing:
         i = k = peak = 0 # main iterator, local iterator, local peak storage
         
         while i < len(energy_frames):
-            if energy_frames[i] >=20000.0:
+            if energy_frames[i] >=20000.0: # first segment is when value goes higher than 20k
                 k = i
-                # the segment should start where the plot begins to rise. So when segment is found, traverse back to find a value
-                #greater than previous one, and update the segment to start/stop at that value
+                # the segment should start where the plot begins to rise. So when segment is found, 
+                # traverse back to find a value greater than previous one,
+                # and update the segment to start at that value
                 while 1:
                     if energy_frames[k] < energy_frames[k-1]:
                         break
@@ -98,7 +99,7 @@ class Preprocessing:
                     try:
                         k+=1
                         
-                        if energy_frames[k] <= peak*0.6 and peak > 1000: # if next value is less than 2/3rd of value in 'peak', we've found the peak
+                        if energy_frames[k] <= peak*0.6 and peak > 5000: # if next value is less than 2/3rd of value in 'peak', we've found the peak
                             peaks.append(energy_frames.index(peak))
                             k+=1
                             break
@@ -115,7 +116,7 @@ class Preprocessing:
                     try:
                         # if the value is atleast 2/3rd of the peak
                         # and difference of last segment and peak is atleast 1/8th of the peak
-                        if energy_frames[k] <= peak*0.6 and peak > 1000: 
+                        if energy_frames[k] <= peak*0.6 and peak > 5000: 
                             
                             # find transition point
                             while k < len(energy_frames):
@@ -147,51 +148,7 @@ class Preprocessing:
     
     #create the pattern of v,c,s from segmented data
     def createPattern(self, segments, peaks, energy_frames):
-        pattern = []
-        i= j = 0
-        
-        # dont pass empty list
-        try:
-            if not segments[j]:
-                pass
-        except IndexError:
-            j+=1
-        
-        # if between range, is a consonant, else a vowel
-        if max(segments[j]) > 1000 and max(segments[j]) <= 10000:
-            pattern.append("c")
-            j+=1
-            
-        elif max(segments[j]) > 10000:
-            pattern.append("v")
-            j+=1
-            i=+1 # next block of code recognizes vowels only, we've recognized one here, so update the iterator
-        
-        for seg in segments:
-            
-            seg = segments[j]
-            
-            if seg:
-                try:
-                    if max(seg) == energy_frames[peaks[i]]: # if there's a peak in the segment, it's a vowel
-                        pattern.append("v")
-                        i+=1
-                        j+=1
-                    
-                    else: # we are only looking for vowels, so if not found. continue
-                        j+=1
-                        continue
-                        
-                    if len(pattern) > 1:
-                        # 2 vowels can't be written together (except for above case). if such a case is found, insert a 'c' b/w them
-    
-                        if pattern[-2] == "v" and pattern[-1] == "v":
-                            pattern.insert(-1, "c")
-                
-                except IndexError:
-                    break
-            
-        return "".join(map(str, pattern)) # return string, not list
+        pass
     
     #a generalized plotting function
     def plotStuff(self, data, title, xlabel, ylabel, xlim1= 0, xlim2= 0, ylim1 = 0, ylim2= 0): # a helper function to plot any data
@@ -530,7 +487,7 @@ class Training:
         self.indices = {"v": 0, "c": 1, "f": 2} # used to set ouput vector
         self.NUM_INPUTS = 300 # per sample 300 inputs
         self.NUM_OUTPUTS = 3 # v, c, f
-        self.NUM_TRAINING_SETS = 785
+        self.NUM_TRAINING_SETS = 1497
         self.training_inputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_INPUTS))
         self.training_outputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_OUTPUTS))
     
@@ -538,8 +495,8 @@ class Training:
         for i in range(r):
             yield i
     
-    def train(self, troughs, crests, save_to):
-        files = [troughs, crests]
+    def train(self, t, t2, c, c2, save_to):
+        files = [t, t2, c, c2]
         
         i = self.get_index(self.NUM_TRAINING_SETS)
         
@@ -563,6 +520,6 @@ class Training:
                     # set output vector
                     self.training_outputs[index, self.indices.get(tmp2)] = 1
         
-        model = RandomForestRegressor(n_estimators=10000, max_features=3).fit(self.training_inputs, self.training_outputs)
+        model = RandomForestRegressor(n_estimators=1000, max_features=3).fit(self.training_inputs, self.training_outputs)
 
         pickle.dump(model, open(save_to, 'wb'))
