@@ -146,9 +146,48 @@ class Preprocessing:
             
         return segments, seg_indices, peaks
     
-    #create the pattern of v,c,s from segmented data
-    def createPattern(self, segments, peaks, energy_frames):
-        pass
+    #create the pattern of v,c from segmented data
+    def createPattern(self, troughs, crests, energy_frames):
+        to_del = []
+        
+        # if peak and segment overlap or are only 2 units apart. its bad data. remove it
+        try:
+            for i in range(len(crests)):
+                if crests[i] == troughs[i+1] or (troughs[i+1] +2) >= crests[i]:
+                    to_del.append(i)
+                    
+            
+            if to_del:
+                for d in to_del:
+                    del crests[d]; del troughs[d+1]
+        except:
+            pass
+        
+#        t2t = []
+#        c2c = []
+#        j = 0
+        
+        for i in range(len(troughs)):
+            if troughs[i+1] < crests[i]:
+                continue
+            
+    def cleansing(self, troughs, crests):
+        to_del = []
+        
+        # if peak and segment overlap or are only 2 units apart. its bad data. remove it
+        
+        for i in range(len(crests)):
+            if crests[i] == troughs[i+1] or (troughs[i+1] +2) >= crests[i]:
+                to_del.append(i)
+                
+        
+        if to_del:
+            for i in range(len(to_del)):
+                if i > 0:
+                    to_del[i] -= 1
+                
+                del crests[to_del[i]]
+                del troughs[to_del[i]+1]
     
     #a generalized plotting function
     def plotStuff(self, data, title, xlabel, ylabel, xlim1= 0, xlim2= 0, ylim1 = 0, ylim2= 0): # a helper function to plot any data
@@ -353,7 +392,8 @@ class Preprocessing:
         
         self.segments, self.seg_start, self.peaks = self.segment(self.s_ef) #get segments, their indices and peaks' indices
         
-    #    pattern = createPattern(segments, peaks, s_ef)
+#        pattern = self.createPattern(self.seg_start, self.peaks, self.s_ef)
+#        self.cleansing(self.seg_start, self.peaks)
         
         zero_crossing_rate = self.zeroCrossingRate(audio)
 #        self.smooth_zcr = self.zcrSmooth(zero_crossing_rate)
@@ -450,36 +490,71 @@ class Predictor:
     
     def getPattern(self):
         prop = ["v", "c", "f"]
-        pattern = ""
-        result = [False]*3
+        pattern = []
         i = 0
         
         try:
             for predict in self.prediction: # prediction is list of lists. predict is single list in it
+                # the prev iteration couldnt find a property, so it must be ambiguous
+                if i == 3:
+                    pattern.append("a")
+                
+                i = 0
                 for p in predict: # list has 3 values
                     if p > 0.55:
-                        result[i] = True # is vowel|consonant|fricative or multiple
+                        pattern.append(prop[i])
+                        break
                     
                     i+=1
-                
-                i = 0
-                
-                # case for multiple not handled
-                for r in result:
-                    if r:
-                        pattern += prop[i] # append property according to index that has true
-                        break
-                    i+=1
-                
-                # reset
-                for k in range(len(result)):
-                    result[k] = False
-                i = 0
         except:
             raise Exception # catch in android as PyException
         
+        amb = lambda x, y: True if x > y else False
+        
+        try:
+            for k in range(len(pattern)):
+                if pattern[k] == "v":
+                    l = len(pattern) - (k+1) # check how many elements left
+                    
+                    if l >= 2: # can check 2 ahead
+                        if pattern[k+1] and pattern[k+2] == "v": # if 3 v consecutive, change 2nd to c/f. because its wronlgy identified
+                            
+                            # get the prediction values for said property
+                            x, y = self.prediction[k+1][1], self.prediction[k+1][2]
+                            
+                            cf = amb(x,y) # c: if True, f: if False
+                            
+                            if cf:
+                                pattern[k+1] = "c"
+                            else:
+                                pattern[k+1] = "f"
+                
+                elif pattern[k] == "a":
+                    # sort the ambiguity out
+                    if not (k-1 < 0):
+                        if pattern[k-1] == "v": # if previous is v, this one should be c/f
+                            x, y = self.prediction[k][1], self.prediction[k][2]
+                            cf = amb(x,y)
+                            
+                            if cf:
+                                pattern[k] = "c"
+                            else:
+                                pattern[k] = "f"
+                                
+                        else: # its a vowel
+                            pattern[k] = "v"
+                    
+                    elif k == 0: # first is always v
+                        pattern[k] == "v"
+                
+                elif k+1 < len(pattern) :
+                    if pattern[k] and pattern[k+1] != "v": # consecutive c/f
+                        pattern[k+1] = "v" # should be a v
+        except:
+            pass
+        
 #        print(self.prediction)
-        return pattern
+        return "".join(pattern)
 
 
 class Training:
@@ -487,7 +562,7 @@ class Training:
         self.indices = {"v": 0, "c": 1, "f": 2} # used to set ouput vector
         self.NUM_INPUTS = 300 # per sample 300 inputs
         self.NUM_OUTPUTS = 3 # v, c, f
-        self.NUM_TRAINING_SETS = 1497
+        self.NUM_TRAINING_SETS = 2565
         self.training_inputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_INPUTS))
         self.training_outputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_OUTPUTS))
     
@@ -495,7 +570,7 @@ class Training:
         for i in range(r):
             yield i
     
-    def train(self, t, t2, c, c2, save_to):
+    def train(self, t, t2, t3, c, c2, c3, save_to):
         files = [t, t2, c, c2]
         
         i = self.get_index(self.NUM_TRAINING_SETS)
