@@ -148,43 +148,22 @@ class Preprocessing:
     
     #create the pattern of v,c from segmented data
     def createPattern(self, troughs, crests, energy_frames):
-        to_del = []
-        
-        # if peak and segment overlap or are only 2 units apart. its bad data. remove it
-        try:
-            for i in range(len(crests)):
-                if crests[i] == troughs[i+1] or (troughs[i+1] +2) >= crests[i]:
-                    to_del.append(i)
-                    
-            
-            if to_del:
-                for d in to_del:
-                    del crests[d]; del troughs[d+1]
-        except:
-            pass
-        
-#        t2t = []
-#        c2c = []
-#        j = 0
-        
-        for i in range(len(troughs)):
-            if troughs[i+1] < crests[i]:
-                continue
+        pass
             
     def cleansing(self, troughs, crests):
         to_del = []
         
-        # if peak and segment overlap or are only 2 units apart. its bad data. remove it
+        # if peak and segment overlap or are only 1 unit apart. its bad data. remove it
         
         for i in range(len(crests)):
-            if crests[i] == troughs[i+1] or (troughs[i+1] +2) >= crests[i]:
+            if crests[i] == troughs[i+1] or (troughs[i+1] +1) >= crests[i]:
                 to_del.append(i)
                 
         
         if to_del:
             for i in range(len(to_del)):
                 if i > 0:
-                    to_del[i] -= 1
+                    to_del[i] -= i # as stuff is deleted, list indices are adjusted. need to stay updated
                 
                 del crests[to_del[i]]
                 del troughs[to_del[i]+1]
@@ -310,7 +289,7 @@ class Preprocessing:
             if segments is None: raise IndexError
             
             for i in range(len(segments)):
-                indices.append(segments[i]//factor)
+                indices.append(segments[i]  //factor)
         except IndexError:
             pass
         
@@ -393,7 +372,7 @@ class Preprocessing:
         self.segments, self.seg_start, self.peaks = self.segment(self.s_ef) #get segments, their indices and peaks' indices
         
 #        pattern = self.createPattern(self.seg_start, self.peaks, self.s_ef)
-#        self.cleansing(self.seg_start, self.peaks)
+        self.cleansing(self.seg_start, self.peaks)
         
         zero_crossing_rate = self.zeroCrossingRate(audio)
 #        self.smooth_zcr = self.zcrSmooth(zero_crossing_rate)
@@ -493,6 +472,7 @@ class Predictor:
         pattern = []
         i = 0
         
+        # create pattern
         try:
             for predict in self.prediction: # prediction is list of lists. predict is single list in it
                 # the prev iteration couldnt find a property, so it must be ambiguous
@@ -509,8 +489,10 @@ class Predictor:
         except:
             raise Exception # catch in android as PyException
         
+        
         amb = lambda x, y: True if x > y else False
         
+        # tweak pattern
         try:
             for k in range(len(pattern)):
                 if pattern[k] == "v":
@@ -528,6 +510,30 @@ class Predictor:
                                 pattern[k+1] = "c"
                             else:
                                 pattern[k+1] = "f"
+                    elif l >= 1: # check 1 ahead. this case will ONLY run for 1 ahead
+                        if pattern[k-1] and pattern[k+1] == "v":
+                            x, y = self.prediction[k][1], self.prediction[k][2]
+                            cf = amb(x,y)
+                            
+                            if cf:
+                                pattern[k] = "c"
+                            else:
+                                pattern[k] = "f"
+                        
+                        # case v(v)c. change both, current and next
+                        elif pattern[k-1] == "v" and not pattern[k+1] == "v":
+                            x, y = self.prediction[k][1], self.prediction[k][2]
+                            cf = amb(x,y)
+                            
+                            if cf:
+                                pattern[k] = "c"
+                            else:
+                                pattern[k] = "f"
+                            
+                            pattern[k+1] = "v"
+                        
+                        elif pattern[k+1] == "v" and not pattern[k-1] == "v":
+                            del pattern[k+1]
                 
                 elif pattern[k] == "a":
                     # sort the ambiguity out
@@ -553,9 +559,80 @@ class Predictor:
         except:
             pass
         
-#        print(self.prediction)
+        print(self.prediction)
         return "".join(pattern)
+    
+    def recognizeCommand(self, pattern):
+        """
+        find length of pattern, use hash table to find similar length patterns,
+        match it index-by-index, calculate score, and store index, retrieve command
+        on that index
+        """
+        
+        hashfunc = lambda x: 9 % x # for a hashtable of 9 rows
+        
+        commands = ["kahan ho", "bas aa raha hn", "kya hal hai", "mae theek hn",
+                    "message kholo", "phone karo", "asalamo alaikum",
+                    "walaikum asalam", "whatsapp chalao"]
+        
+        # patterns will start and end at vowels
+        patterns = ["vfvfv", "vcvfvfvfv", "vfvfv", "vcvcv", "vcvcvfv",
+                    "vcvfv", "vcvfvfvfvcv", "vfvcvfvcvfv", "vcvcvfv"]
+        
+        score = []
+        hashtable = dict()
+        
+        for p in patterns:
+            index = hashfunc(len(p))
+            hashtable.setdefault(index, []).append(p) # append as list
+        
+        index = hashfunc(len(pattern))
+        tries = 0 # to check how many times index was manually changed to find value in hashtable
 
+        while True:
+            try:
+                for element in hashtable[index]:
+                    
+                    try:
+                        c = 0
+                        for i in range(len(pattern)):
+                            if not (pattern[i] == element[i]):
+                                raise IndexError
+                            
+                            c+=1
+    
+                        score.append((patterns.index(element), (c*100)/len(element))) # store tuple of index of pattern and its score in %
+                        
+                    except IndexError:
+                        score.append((patterns.index(element), (c*100)/len(element)))
+                        continue
+                
+                break # the while
+                
+            except KeyError:
+                if tries == 0:
+                    tries+=1
+                    index = hashfunc(len(pattern)+2)
+                    continue
+                
+                elif tries == 1:
+                    tries +=1
+                    index = hashfunc(len(pattern)-2)
+                    continue
+                
+                elif tries == 2: # cant find
+                    break
+        
+        # we have the scores with their respective indices now
+        # analyze scores to keep scores above 80%
+        
+        for i in range(len(score)):
+            x,y = score[i]
+            
+            if(y > 80.0):
+                return commands[x]
+        
+        return None
 
 class Training:
     def __init__(self):
