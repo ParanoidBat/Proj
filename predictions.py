@@ -50,7 +50,7 @@ for f in testing_files:
 #            
 #            testing_outputs[index, indices.get(tmp2)] = 1
 
-with open('newer_model.sav', 'rb') as file:
+with open('newer_model_with_all.sav', 'rb') as file:
     model = pickle.load(file)
 
 prediction = model.predict(testing_samples)

@@ -145,10 +145,6 @@ class Preprocessing:
                     del temp_seg[:]
             
         return segments, seg_indices, peaks
-    
-    #create the pattern of v,c from segmented data
-    def createPattern(self, troughs, crests, energy_frames):
-        pass
             
     def cleansing(self, troughs, crests):
         to_del = []
@@ -559,7 +555,7 @@ class Predictor:
         except:
             pass
         
-        print(self.prediction)
+#        print(self.prediction)
         return "".join(pattern)
     
     def recognizeCommand(self, pattern):
@@ -569,14 +565,14 @@ class Predictor:
         on that index
         """
         
-        hashfunc = lambda x: 9 % x # for a hashtable of 9 rows
+        hashfunc = lambda x: 8 % x # for a hashtable of 9 rows
         
-        commands = ["kahan ho", "bas aa raha hn", "kya hal hai", "mae theek hn",
+        commands = ["kahan ho", "bas aa raha hn", "mae theek hn",
                     "message kholo", "phone karo", "asalamo alaikum",
                     "walaikum asalam", "whatsapp chalao"]
         
         # patterns will start and end at vowels
-        patterns = ["vfvfv", "vcvfvfvfv", "vfvfv", "vcvcv", "vcvcvfv",
+        patterns = ["vfvfv", "vcvfvfvfv", "vcvcv", "vcvcvfv",
                     "vcvfv", "vcvfvfvfvcv", "vfvcvfvcvfv", "vcvcvfv"]
         
         score = []
@@ -634,21 +630,35 @@ class Predictor:
         
         return None
 
-class Training:
+class Training:    
     def __init__(self):
         self.indices = {"v": 0, "c": 1, "f": 2} # used to set ouput vector
         self.NUM_INPUTS = 300 # per sample 300 inputs
         self.NUM_OUTPUTS = 3 # v, c, f
-        self.NUM_TRAINING_SETS = 2565
-        self.training_inputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_INPUTS))
-        self.training_outputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_OUTPUTS))
     
     def get_index(self, r): # used to populate input vector
         for i in range(r):
             yield i
     
-    def train(self, t, t2, t3, c, c2, c3, save_to):
-        files = [t, t2, c, c2]
+    def set_training_sets(self, files):
+        total = 0
+        
+        for fn in files:
+            with open(fn) as f:
+                for i, l in enumerate(f):
+                    pass
+            
+            total += (i+1)
+            
+        return total
+    
+    def train(self, save_to, *args):
+        files = [x for x in args]
+        
+        self.NUM_TRAINING_SETS =  self.set_training_sets(files)
+        print(self.NUM_TRAINING_SETS)
+        self.training_inputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_INPUTS))
+        self.training_outputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_OUTPUTS))
         
         i = self.get_index(self.NUM_TRAINING_SETS)
         

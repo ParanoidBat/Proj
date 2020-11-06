@@ -5,12 +5,12 @@ import VowelRecognizer as vr
 
 pre = vr.Preprocessing()
 
-pre.recognizeVowels("More Samples/Salam.wav", visual=True)
+pre.recognizeVowels("audio.wav", visual=True)
 
-energy = pre.getEnergy()
-troughs =pre.getTroughs()
-crests = pre.getCrests()
-#
+#energy = pre.getEnergy()
+#troughs =pre.getTroughs()
+#crests = pre.getCrests()
+
 #zcr = pre.getZCR()
 #ztroughs = pre.getTroughsZCR()
 #zcrests = pre.getCrestsZCR()
