@@ -5,7 +5,7 @@ import VowelRecognizer as vr
 
 pre = vr.Preprocessing()
 
-pre.recognizeVowels("audio.wav", visual=True)
+pre.recognizeVowels("More Samples/Kahan ho.wav", visual=True)
 
 #energy = pre.getEnergy()
 #troughs =pre.getTroughs()
