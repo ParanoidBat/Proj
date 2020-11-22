@@ -367,11 +367,10 @@ class Preprocessing:
         
         self.segments, self.seg_start, self.peaks = self.segment(self.s_ef) #get segments, their indices and peaks' indices
         
-#        pattern = self.createPattern(self.seg_start, self.peaks, self.s_ef)
         self.cleansing(self.seg_start, self.peaks)
         
         zero_crossing_rate = self.zeroCrossingRate(audio)
-#        self.smooth_zcr = self.zcrSmooth(zero_crossing_rate)
+        
         self.smooth_zcr = npy.array( self.smooth(zero_crossing_rate, zero_crossing_rate.size, 7))
         
         if visual:
@@ -381,7 +380,7 @@ class Preprocessing:
             indices = npy.array(self.seg_start)
             peakses = npy.array(self.peaks)
             
-            #mark segments and peaks on energy contour
+            # mark segments and peaks on energy contour
             plt.plot(contour)
             plt.plot(indices, contour[indices],'x')
             plt.plot(peakses, contour[peakses], 'v')
@@ -565,7 +564,7 @@ class Predictor:
         on that index
         """
         
-        hashfunc = lambda x: 8 % x # for a hashtable of 9 rows
+        hashfunc = lambda x: 8 % x # for a hashtable of 8 rows
         
         commands = ["kahan ho", "bas aa raha hn", "mae theek hn",
                     "message kholo", "phone karo", "asalamo alaikum",
@@ -656,7 +655,6 @@ class Training:
         files = [x for x in args]
         
         self.NUM_TRAINING_SETS =  self.set_training_sets(files)
-        print(self.NUM_TRAINING_SETS)
         self.training_inputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_INPUTS))
         self.training_outputs = npy.zeros((self.NUM_TRAINING_SETS, self.NUM_OUTPUTS))
         
