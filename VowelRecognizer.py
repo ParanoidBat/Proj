@@ -5,7 +5,7 @@ Created on Mon Jul 15 15:50:07 2019
 @author: Batman
 """
 import numpy as npy
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 #import sounddevice as sd
 from scipy.io.wavfile import read
@@ -590,6 +590,7 @@ class Predictor:
                     
                     try:
                         c = 0
+                        # calculate score for each match
                         for i in range(len(pattern)):
                             if not (pattern[i] == element[i]):
                                 raise IndexError
@@ -625,6 +626,7 @@ class Predictor:
             x,y = score[i]
             
             if(y > 80.0):
+                # return the first command with score above 80%
                 return commands[x]
         
         return None
